@@ -55,7 +55,7 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar barStyle="light-content" backgroundColor="#1f45fc" />
-        <Stack.Navigator initialRouteName="MapScreen">
+        <Stack.Navigator initialRouteName="Home">
           <Stack.Screen name="SplashScreen" component={SplashScreen} options={{headerShown: false}} />
           <Stack.Screen name="PhoneSignIn" component={PhoneSignIn} options={{headerShown: false}} />
           <Stack.Screen name="Home" component={Home} options={{headerShown: false}} />

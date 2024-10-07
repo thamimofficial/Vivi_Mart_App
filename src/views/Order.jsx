@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import Header from './components/Header';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import RazorpayCheckout from 'react-native-razorpay';
+import ExpandableLocationCard from './components/ExpandableLocationCard';
 
 const Order = () => {
   const navigation = useNavigation();
@@ -237,6 +238,7 @@ const Order = () => {
 
   return (
     <View style={styles.container}>
+        <ExpandableLocationCard />
              <Header leftIconName="home-outline" />
              
       <Text style={styles.heading}>Your Orders</Text>

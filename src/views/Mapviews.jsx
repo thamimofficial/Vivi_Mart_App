@@ -3,20 +3,26 @@ import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Alert, ActivityIn
 import MapView, { Marker } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const GOOGLE_MAPS_APIKEY = "AIzaSyCldVSEPoJ4_YS1rlM_LbWgbNMc_TTMBv8"; // Replace with your actual API key
 
 export default function MapScreen() {
+  const route = useRoute();
+  const { lat, lng } = route.params || {}; // Default to an empty object if no params
+
   const navigation = useNavigation();
-  const [coordinates, setCoordinates] = useState({ latitude: 13.083372224685666, longitude: 80.2326378919348 }); // Default coordinates
+  const [coordinates, setCoordinates] = useState({ latitude: lat || 13.083372224685666, longitude: lng || 80.2326378919348 }); // Default coordinates
   const [region, setRegion] = useState(""); // For displaying the formatted address
   const [isFetchingAddress, setIsFetchingAddress] = useState(false); // Loading state for address fetching
   const mapView = useRef(null);
 
   useEffect(() => {
     requestLocationPermission();
-  }, []);
+    if (lat && lng) {
+      fetchAddress(lat, lng); // If lat and lng are passed, fetch the address immediately
+    }
+  }, [lat, lng]);
 
   // Request location permission for Android
   const requestLocationPermission = async () => {
@@ -33,7 +39,7 @@ export default function MapScreen() {
           }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          getCurrentPosition();
+          if (!lat || !lng) getCurrentPosition(); // Fetch current location only if lat and lng are not provided
         } else {
           Alert.alert('Error', 'Location permission not granted.');
         }
@@ -41,7 +47,7 @@ export default function MapScreen() {
         console.warn(err);
       }
     } else {
-      getCurrentPosition(); // iOS permissions handled automatically
+      if (!lat || !lng) getCurrentPosition(); // iOS permissions handled automatically, get current location if needed
     }
   };
 
@@ -75,8 +81,6 @@ export default function MapScreen() {
         const pincode = formattedAddress.match(/(\d{6})\s*,\s*India/)?.[1] || 'Pincode not found';
         await AsyncStorage.setItem('pin_codes', pincode);
         await AsyncStorage.setItem('city_name', formattedAddress);
-
-        //navigation.replace('Home');
       } else {
         console.log('Geocoding error:', json.status);
       }
@@ -110,7 +114,7 @@ export default function MapScreen() {
       address: region,
     });
     Alert.alert('Location Submitted', `Latitude: ${coordinates.latitude}, Longitude: ${coordinates.longitude}, Address: ${region}`);
-    navigation.navigate('Home')
+    navigation.navigate('Home');
   };
 
   return (
@@ -127,7 +131,7 @@ export default function MapScreen() {
         onPress={handleMapPress} // Add onPress event to the MapView
       >
         <Marker
-          coordinate={coordinates}
+          coordinate={coordinates} // Use the correct coordinates object
           draggable
           onDragEnd={handleMarkerDragEnd}
         />
@@ -150,6 +154,7 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+   
   },
   maps: {
     width: Dimensions.get('screen').width,
@@ -163,21 +168,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
+     borderWidth:1,borderColor:'gray'
   },
   addressText: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 20,
+    textAlign:'center'
   },
   submitButton: {
-    alignSelf: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#FF6347',
+    backgroundColor: '#003d9d',
     borderRadius: 10,
+    width:'90%',
+    alignSelf:'center'
   },
   submitButtonText: {
     color: '#ffffff',
     fontSize: 20,
+    textAlign:'center',
+    fontWeight:'700'
   },
 });

@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "978230642962",
+    "project_id": "vivimartuser",
+    "storage_bucket": "vivimartuser.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978230642962:android:dd55524bb33bc070740bcb",
+        "android_client_info": {
+          "package_name": "com.vivi_mart_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFu6TNTBalw31Y9ttv-9mCqsFLzhLypDk"
+        },
+        {
+          "current_key": "AIzaSyDwFWZ_gV5MRMSgHq9xEmnrCCrEltjdl4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978230642962:android:07f08af241531f00740bcb",
+        "android_client_info": {
+          "package_name": "com.vivimart"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFu6TNTBalw31Y9ttv-9mCqsFLzhLypDk"
+        },
+        {
+          "current_key": "AIzaSyDwFWZ_gV5MRMSgHq9xEmnrCCrEltjdl4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978230642962:android:3bb05cea1cc46ec4740bcb",
+        "android_client_info": {
+          "package_name": "com.vivmart.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFu6TNTBalw31Y9ttv-9mCqsFLzhLypDk"
+        },
+        {
+          "current_key": "AIzaSyDwFWZ_gV5MRMSgHq9xEmnrCCrEltjdl4s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
