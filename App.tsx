@@ -12,44 +12,13 @@ import AllProduct from './src/views/AllProduct';
 import SplashScreen from './src/views/authentication/SplashScreen';
 import MapScreen from './src/views/Mapviews';
 import PhoneSignIn from './src/views/authentication/PhoneSignIn';
+import YourOrder from './src/views/YourOrder';
 // import RazorpayPayment from './src/views/razorpaylink';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
 
-  // async function requestUserPermission() {
-  //   const authStatus = await messaging().requestPermission();
-  //   const enabled =
-  //     authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-  //     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-  
-  //   if (enabled) {
-  //     console.log('Authorization status:', authStatus);
-  //   } else {
-  //     console.log('User has not granted permission');
-  //   }
-  // }
-
-  // const getToken = async () => {
-  //   try {
-  //     const token = await messaging().getToken();
-  //     console.log("Token:", token);
-  //   } catch (error) {
-  //     console.error("Error getting token:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   requestUserPermission();
-  //   getToken();
-
-  //   // Optional: clean up listeners or subscriptions if needed
-  //   return () => {
-  //     // Example of cleanup (if using listeners like messaging().onMessage)
-  //     // messaging().onMessage(() => {}).unsubscribe();
-  //   };
-  // }, []);
   
   return (
     <SafeAreaProvider>
@@ -65,6 +34,7 @@ export default function App() {
           <Stack.Screen name="GooglePlacesAutocomplete" component={GooglePlacesAutocomplete} options={{headerShown: false}} />
           <Stack.Screen name="AllProduct" component={AllProduct} options={{headerShown: false}} />
           <Stack.Screen name="MapScreen" component={MapScreen} options={{headerShown: false}} />
+          <Stack.Screen name="YourOrder" component={YourOrder} options={{headerShown: false}} />
           
 
           {/* Add other screens here */}

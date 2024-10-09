@@ -166,7 +166,7 @@ export const getSubSubCategoriesProduct = async (category) => {
 
 export const getBanners = async () => {
   try {   
-    const response = await fetch(`${BASE_URL}/banners`, {
+    const response = await fetch(`${BASE_URL}/mobile-banners`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

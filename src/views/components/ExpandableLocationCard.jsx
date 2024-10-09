@@ -19,7 +19,7 @@ import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { getlocationID } from '../../utils/config'; // Ensure you have the correct path
 import { useNavigation } from '@react-navigation/native';
 
-const ExpandableLocationCard = () => {
+const ExpandableLocationCard = ({ showBackButton }) => {
   const navigation = useNavigation()
   const [modalVisible, setModalVisible] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
@@ -174,7 +174,16 @@ console.log('location data',data)
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={openModal} style={styles.topBar}>
+        
+      {/* <TouchableOpacity onPress={openModal} style={styles.topBar}></TouchableOpacity> */}
+      <View style={{flexDirection:"row", alignItems:'center'}}>
+      {showBackButton && (
+                <TouchableOpacity style={{color:'white',backgroundColor:'#1c44fc',padding:7.5,width:'10%',marginLeft:45}} onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                </TouchableOpacity>
+            )}
+
+      <TouchableOpacity onPress={()=>navigation.navigate('GooglePlacesAutocomplete')} style={styles.topBar}>
         <Ionicons name="chevron-down-outline" size={18} color="#fff" />
         <View style={{flexDirection:'row'}}>
             <Text style={styles.topBarText} numberOfLines={1}>
@@ -185,6 +194,8 @@ console.log('location data',data)
             </Text>
         </View>
       </TouchableOpacity>
+
+      </View>
 
       {/* Main Location Modal */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={closeModal}>
@@ -326,8 +337,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     padding: 10,
+    fontSize: 16,
     marginBottom: 15,
   },
+  
   applyButton: {
     width: '100%',
     backgroundColor: '#1476bc',

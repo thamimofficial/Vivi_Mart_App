@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Geolocation from 'react-native-geolocation-service';  // Import Geolocation
+import Geolocation from 'react-native-geolocation-service'; // Import Geolocation
 
 import { getlocationID } from '../utils/config';
 
@@ -14,7 +14,7 @@ const GooglePlacesAutocomplete = () => {
   const [predictions, setPredictions] = useState([]);
   const [pincode, setPincode] = useState('');
   const [fullAddress, setFullAddress] = useState('');
-  const [locationData, setLocationData] = useState();
+  const [locationData, setLocationData] = useState(null); // Initialize to null
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -45,10 +45,6 @@ const GooglePlacesAutocomplete = () => {
                 const location = detailJson.result.geometry.location; // Get the latitude and longitude
                 const { lat, lng } = location;
 
-                // Log latitude and longitude
-                console.log('Latitude:', lat);
-                console.log('Longitude:', lng);
-
                 return postalCode ? { ...prediction, full_address: `${address}, ${postalCode}`, lat, lng } : null;
               }
               return null;
@@ -77,8 +73,7 @@ const GooglePlacesAutocomplete = () => {
   const handlePincodeSubmit = async () => {
     setLoading(true);
     Alert.alert('Pincode Entered', `Your Pincode: ${pincode}`);
-console.log('locationData',locationData)
-// navigation.navigate('MapScreen', { locationData });
+    console.log('locationData', locationData);
 
     try {
       const { status, data } = await getlocationID(pincode);
@@ -142,32 +137,36 @@ console.log('locationData',locationData)
     );
   };
 
-
   const renderPrediction = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
         console.log('Selected Address:', item.full_address);
         console.log('Location Coordinates:', `Latitude: ${item.lat}, Longitude: ${item.lng}`);
 
-
         setLocationData({ lat: item.lat, lng: item.lng });
-
 
         const postalCode = item.full_address.match(/\d{6}$/)?.[0] || 'No postal code';
         setFullAddress(item.full_address);
         setPincode(postalCode);
-        navigation.navigate('MapScreen',{lat: item.lat, lng: item.lng})
-
-        // if (postalCode.length === 6) {
-        //   handlePincodeSubmit();
-        // } else {
-        //   Alert.alert('Invalid Postal Code', 'The selected address does not contain a valid postal code.');
-        // }
+        navigation.navigate('MapScreen', { lat: item.lat, lng: item.lng });
       }}
       style={styles.predictionItem}
     >
       <Text style={styles.mainText}>{item.description.split(' ')[0]}</Text>
       <Text style={styles.subText}>{item.full_address}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderCurrentLocation = () => (
+    <TouchableOpacity
+      style={{ flexDirection: 'row', alignSelf: 'flex-start', justifyContent: 'flex-start', marginVertical: 10,marginHorizontal:30 }}
+      onPress={getCurrentLocation}
+    >
+      <MaterialIcons name={'my-location'} size={30} color="#000000" />
+      <View style={{ marginLeft: 10 }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Use Current Location</Text>
+        <Text style={{ fontSize: 14, color: '#777' }}>Using GPS</Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -191,12 +190,8 @@ console.log('locationData',locationData)
         renderItem={renderPrediction}
         keyExtractor={(item) => item.place_id}
         ListEmptyComponent={() => <Text style={styles.emptyText}>No results found</Text>}
+        ListFooterComponent={renderCurrentLocation}
       />
-      {/* <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }} onPress={getCurrentLocation}>
-        <MaterialIcons name={'my-location'} size={30} color="#000000" />
-        <Text>Use Current Location</Text>
-        <Text>Using GPS</Text>
-      </TouchableOpacity> */}
     </View>
   );
 };
@@ -208,9 +203,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 15,
     marginTop: 40,
-    backgroundColor:'white',
-    borderRadius:10,
-    elevation:3
+    backgroundColor: 'white',
+    borderRadius: 10,
+    elevation: 3,
   },
   backButton: {
     alignSelf: 'center',
@@ -219,14 +214,10 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     height: 50,
-    // borderRadius: 25,
-    // borderColor: '#ddd',
-    // borderWidth: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 15,
     fontSize: 16,
-    borderRadius:10,
-    // elevation: 2,
+    borderRadius: 10,
   },
   predictionItem: {
     backgroundColor: '#fff',
@@ -237,7 +228,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     borderColor: '#ddd',
     borderBottomWidth: 1,
-    elevation:3
+    elevation: 3,
   },
   mainText: {
     fontSize: 18,
@@ -245,13 +236,13 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   subText: {
-    color: '#777',
+    color: '#666',
     marginTop: 5,
   },
   emptyText: {
+    padding: 20,
     textAlign: 'center',
-    marginTop: 30,
-    color: '#aaa',
+    color: '#888',
     fontSize: 16,
   },
 });

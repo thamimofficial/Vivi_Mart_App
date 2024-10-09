@@ -5,9 +5,9 @@ import { getCartProduct, placeOrder } from '../utils/config';
 import Modal from 'react-native-modal';
 import { useNavigation } from '@react-navigation/native';
 import Header from './components/Header';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import RazorpayCheckout from 'react-native-razorpay';
 import ExpandableLocationCard from './components/ExpandableLocationCard';
+import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 
 const Order = () => {
   const navigation = useNavigation();
@@ -15,7 +15,8 @@ const Order = () => {
   const [cartItems, setCartItems] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
   const [allProduct, setAllProduct] = useState([]);
-
+  const [deliveryOption, setDeliveryOption] = useState('Standard Delivery');
+  const [filteredItems, setFilteredItems] = useState([]);
 
   // Modal states
   const [isModalVisible, setModalVisible] = useState(false);
@@ -27,6 +28,12 @@ const Order = () => {
   useEffect(() => {
     fetchCartItems();
   }, []);
+
+  useEffect(() => {
+    const filtered = cartItems.filter(item => item.delivery_option === deliveryOption);
+    setFilteredItems(filtered);
+    calculateTotal(filtered);
+  }, [cartItems, deliveryOption]);
 
   const fetchCartItems = async () => {
     try {
@@ -74,7 +81,6 @@ const Order = () => {
     const updatedCart = cartItems.filter((item) => item.product_id !== product_id);
     await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
     setCartItems(updatedCart);
-    calculateTotal(updatedCart);
   };
 
   const incrementQuantity = async (product_id) => {
@@ -86,26 +92,17 @@ const Order = () => {
     });
     await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
     setCartItems(updatedCart);
-    calculateTotal(updatedCart);
   };
 
   const decrementQuantity = async (product_id) => {
     const updatedCart = cartItems.map(item => {
       if (item.product_id === product_id) {
-        if (item.quantity > 1) {
-          return { ...item, quantity: item.quantity - 1 };
-        } else {
-          removeFromCart(product_id);
-          return item;
-        }
+        return { ...item, quantity: Math.max(1, item.quantity - 1) };
       }
       return item;
     });
-    if (updatedCart.length > 0) {
-      await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
-      setCartItems(updatedCart);
-      calculateTotal(updatedCart);
-    }
+    await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+    setCartItems(updatedCart);
   };
 
   const handlePlaceOrder = async () => {
@@ -115,11 +112,10 @@ const Order = () => {
     }
     const location_id = await AsyncStorage.getItem('location_id');
     const phone_number = await AsyncStorage.getItem('phoneNumber');
-    console.log('order location id',location_id)
-    console.log('order phone_number',phone_number)
+
     const order = {
       location: location_id || 1,
-      cartItems: cartItems.map(item => ({
+      cartItems: filteredItems.map(item => ({
         Product_name: item.Product_name,
         product_id: item.product_id,
         quantity: item.quantity,
@@ -127,22 +123,19 @@ const Order = () => {
         weight: item.weight,
       })),
       address: address,
-      phone_number: phone_number || 9361879529,
+      phone_number: phone_number || '+919361879529',
       payment_method: paymentMethod,
       delivery_notes: deliveryNotes,
+      delivery_option: deliveryOption,
     };
 
-    if(paymentMethod=='Online'){
-      createOrder()
-      return
+    if (paymentMethod === 'Online') {
+      createOrder();
+      return;
     }
-
-    console.log('order',order)
 
     try {
       const result = await placeOrder(order);
-      console.log('order data',order)
-      console.log('order response result',result)
       Alert.alert('Order Successful', result.data.message, [
         {
           text: 'OK',
@@ -158,13 +151,10 @@ const Order = () => {
       Alert.alert('Order Error', error.message);
     }
   };
-  
 
   const createOrder = async () => {
-    // Define your Razorpay key here
     const razorpayKey = 'rzp_test_Cd1cVSHpocrBwT'; // Replace with your Razorpay key
 
-    // Create an order on Razorpay
     const options = {
       key: razorpayKey,
       amount: totalAmount * 100, // Convert to paise
@@ -172,7 +162,7 @@ const Order = () => {
       name: 'Test Company',
       description: 'Test Order',
       prefill: {
-        name: 'John Doe',
+        name: name,
         email: 'john@example.com',
         contact: '9999999999',
       },
@@ -181,22 +171,14 @@ const Order = () => {
 
     RazorpayCheckout.open(options)
       .then((data) => {
-        // Payment success handler
-        console.log('Payment Success:', data);
-        console.log(`Payment successful: ${data.razorpay_payment_id}`)
         Alert.alert('Success', `Payment successful: ${data.razorpay_payment_id}`);
       })
       .catch((error) => {
-        // Payment failure handler
-        console.error('Payment Error:', error);
         Alert.alert('Error', 'Payment failed!');
       });
   };
 
-
   const renderCartItem = ({ item }) => {
-    const productDetail = allProduct.find(product => product.product_id === item.product_id);
-
     return (
       <View style={styles.card}>
         <Image
@@ -207,22 +189,24 @@ const Order = () => {
         />
         <View style={styles.details}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{width:'60%'}}>
+            <View style={{ width: '60%' }}>
               <Text style={styles.productName} numberOfLines={1}>{item.Product_name}</Text>
               <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
               <Text style={styles.productPrice}>Price: ₹{(item.sell_price * item.quantity).toFixed(2)}</Text>
+              <Text style={styles.productPrice}>Option: {item.delivery_option}</Text>
             </View>
 
             <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <TouchableOpacity onPress={() => removeFromCart(item.product_id)}>
-                <Ionicons name="trash-bin-outline" size={20} color="#FF0000" />
-              </TouchableOpacity>
-
               <View style={styles.quantityContainer}>
-              <TouchableOpacity style={styles.incrementButton} onPress={() => decrementQuantity(item.product_id)}>
-                  <Text style={styles.incrementButtonText}>−</Text>
-                </TouchableOpacity>
-              
+                {item.quantity === 1 ? (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => removeFromCart(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => decrementQuantity(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                )}
                 <Text style={styles.productDetails}>{item.quantity}</Text>
                 <TouchableOpacity style={styles.incrementButton} onPress={() => incrementQuantity(item.product_id)}>
                   <Text style={styles.incrementButtonText}>+</Text>
@@ -238,118 +222,167 @@ const Order = () => {
 
   return (
     <View style={styles.container}>
-        <ExpandableLocationCard />
-             <Header leftIconName="home-outline" />
-             
-      <Text style={styles.heading}>Your Orders</Text>
+      <ExpandableLocationCard />
+      <Header leftIconName="home-outline" />
+      <Text style={styles.heading}>My Cart</Text>
       {cartItems.length === 0 ? (
         <>
-        
-        <Image source={require('../assets/cart.png')} style={{width:'90%',height:'50%',resizeMode:'contain'}} />
-        <Text style={styles.emptyMessage}>Your cart is empty.</Text>
-        <TouchableOpacity
-  style={{
-    width: '90%',
-    backgroundColor: '#003d9d',
-    position: 'absolute',
-    margin: 10,
-    bottom: 0,
-    borderRadius: 10,
-    alignSelf: 'center',
-    justifyContent: 'center', // Center the content vertically
-    alignItems: 'center', // Center the content horizontally
-  }}
-  onPress={()=>navigation.replace('Home')}
->
-  <Text
-    style={{
-      fontSize: 16,
-      fontWeight: '800',
-      color: 'white',
-      padding: 15,
-      textAlign: 'center', // Center the text within the Text component
-    }}
-  >
-    Add to Cart
-  </Text>
-</TouchableOpacity>
-
+          <Image source={require('../assets/cart.png')} style={{ width: '90%', height: '50%', resizeMode: 'contain' }} />
+          <Text style={styles.emptyMessage}>Your cart is empty.</Text>
+          <TouchableOpacity
+            style={{
+              width: '90%',
+              backgroundColor: '#003d9d',
+              position: 'absolute',
+              margin: 10,
+              bottom: 0,
+              borderRadius: 10,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+            onPress={() => navigation.replace('Home')}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '800', color: 'white', padding: 15, textAlign: 'center' }}>
+              Add to Cart
+            </Text>
+          </TouchableOpacity>
         </>
       ) : (
+      //   <>
+      //   <View style={styles.deliveryOptionContainer}>
+      //     <TouchableOpacity
+      //       style={[styles.deliveryOptionButton, deliveryOption === 'Standard Delivery' && styles.selectedDeliveryOption]}
+      //       onPress={() => setDeliveryOption('Standard Delivery')}
+      //     >
+      //       <Text style={styles.deliveryOptionText}>Standard Delivery</Text>
+      //     </TouchableOpacity>
+      //     <TouchableOpacity
+      //       style={[styles.deliveryOptionButton, deliveryOption === 'Fast Delivery' && styles.selectedDeliveryOption]}
+      //       onPress={() => setDeliveryOption('Fast Delivery')}
+      //     >
+      //       <Text style={styles.deliveryOptionText}>Fast Delivery</Text>
+      //     </TouchableOpacity>
+      //   </View>
+      //   <FlatList
+      //     data={cartItems}
+      //     renderItem={renderCartItem}
+      //     keyExtractor={(item) => item.product_id}
+      //     contentContainerStyle={{ paddingBottom: 100 }}
+      //     showsVerticalScrollIndicator={false}
+      //   />
+
+      //   <View style={styles.bottomContainer}>
+      //     <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
+      //     {deliveryOption === 'Standard Delivery' ? (
+      //       <TouchableOpacity style={styles.orderNowButton} onPress={() => setModalVisible(true)}>
+      //         <Text style={styles.orderNowText}>Order Now</Text>
+      //       </TouchableOpacity>
+      //     ) : (
+      //       <TouchableOpacity style={styles.fastOrderNowButton} onPress={() => setModalVisible(true)}>
+      //         <Text style={styles.fastOrderNowText}>Order Now</Text>
+      //       </TouchableOpacity>
+      //     )}
+      //   </View>
+      // </>
         <>
-        <FlatList
-          data={cartItems}
-          renderItem={renderCartItem}
-          keyExtractor={(item) => item.product_id}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-        />
-   
+          <View style={styles.deliveryOptionContainer}>
+            <TouchableOpacity
+              style={[styles.deliveryOptionButton, deliveryOption === 'Standard Delivery' && styles.selectedDeliveryOption]}
+              onPress={() => setDeliveryOption('Standard Delivery')}
+            >
+              <Text style={styles.deliveryOptionText}>Standard Delivery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.deliveryOptionButton, deliveryOption === 'Fast Delivery' && styles.selectedDeliveryOption]}
+              onPress={() => setDeliveryOption('Fast Delivery')}
+            >
+              <Text style={styles.deliveryOptionText}>Fast Delivery</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={filteredItems}
+            renderItem={renderCartItem}
+            keyExtractor={item => item.product_id.toString()}
+          />
+        <View style={styles.bottomContainer}>
+            <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
+            {deliveryOption === 'Standard Delivery' ? (
+              <TouchableOpacity style={styles.orderNowButton} onPress={() => setModalVisible(true)}>
+                <Text style={styles.orderNowText}>Order Now</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.fastOrderNowButton} onPress={() => setModalVisible(true)}>
+                <Text style={styles.fastOrderNowText}>Order Now</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </>
+      )}
 
-      <View style={styles.bottomContainer}>
-        <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
-        <TouchableOpacity style={styles.orderNowButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.orderNowText}>Order Now</Text>
-        </TouchableOpacity>
-      </View>
-      </>
-    )}
 
-<Modal isVisible={isModalVisible} style={styles.modal}>
-      <View style={styles.modalContent}>
-        <Text style={styles.modalTitle}>Place Your Order</Text>
-        <Text style={styles.paymentMethodTitle}>Payment Method</Text>
-        
-        <View style={styles.paymentMethodContainer}>
-          <TouchableOpacity
-            style={[styles.paymentButton, paymentMethod === 'COD' && styles.selectedPayment]}
-            onPress={() => setPaymentMethod('COD')}
-          >
-            {paymentMethod === 'COD' &&  <Ionicons name="checkmark-circle-sharp" size={20} color="green" />}
-            <Text style={styles.paymentText}>Cash on Delivery</Text>
+
+
+
+
+
+
+
+
+
+     <Modal isVisible={isModalVisible} style={styles.modal}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Place Your Order</Text>
+          <Text style={styles.paymentMethodTitle}>Payment Method</Text>
+
+          <View style={styles.paymentMethodContainer}>
+            <TouchableOpacity
+              style={[styles.paymentButton, paymentMethod === 'COD' && styles.selectedPayment]}
+              onPress={() => setPaymentMethod('COD')}
+            >
+              {paymentMethod === 'COD' && <Ionicons name="checkmark-circle-sharp" size={20} color="green" />}
+              <Text style={styles.paymentText}>Cash on Delivery</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.paymentButton, paymentMethod === 'Online' && styles.selectedPayment]}
+              onPress={() => setPaymentMethod('Online')}
+            >
+              {paymentMethod === 'Online' && <Ionicons name="checkmark-circle-sharp" size={20} color="green" />}
+              <Text style={styles.paymentText}>Online Payment</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Your Name"
+            value={name}
+            onChangeText={setName}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Your Address"
+            value={address}
+            onChangeText={setAddress}
+            placeholderTextColor="#888"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Delivery Notes"
+            value={deliveryNotes}
+            onChangeText={setDeliveryNotes}
+            placeholderTextColor="#888"
+          />
+
+          <TouchableOpacity style={styles.modalButton} onPress={handlePlaceOrder}>
+            <Text style={styles.modalButtonText}>Place Order</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.paymentButton, paymentMethod === 'Online' && styles.selectedPayment]}
-            onPress={() => setPaymentMethod('Online')}
-          >
-            {paymentMethod === 'Online' &&  <Ionicons name="checkmark-circle-sharp" size={20} color="green" />}
-            <Text style={styles.paymentText}>Online Payment</Text>
+
+          <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
+            <Text style={styles.closeModalButtonText}>Close</Text>
           </TouchableOpacity>
         </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Your Name"
-          value={name}
-          onChangeText={setName}
-          placeholderTextColor="#888"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Your Address"
-          value={address}
-          onChangeText={setAddress}
-          placeholderTextColor="#888"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Delivery Notes"
-          value={deliveryNotes}
-          onChangeText={setDeliveryNotes}
-          placeholderTextColor="#888"
-        />
-        
-        <TouchableOpacity style={styles.modalButton} onPress={handlePlaceOrder}>
-          <Text style={styles.modalButtonText}>Place Order</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
-          <Text style={styles.closeModalButtonText}>Close</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-
-      {/* <Button title="Pay" onPress={createOrder} /> */}
+      </Modal>
     </View>
   );
 };
@@ -363,15 +396,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
-    color:'black',
-    margin:10
+    color: 'black',
+    margin: 10
   },
   emptyMessage: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
-    fontWeight:'800',
-    color:'black'
+    fontWeight: '800',
+    color: 'black'
   },
   bottomContainer: {
     flexDirection: 'row',
@@ -381,20 +414,31 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#ccc',
     paddingTop: 16,
-    padding:20
+    padding: 20
   },
   totalText: {
     fontSize: 18,
     fontWeight: '900',
-    color:'black'
+    color: 'black'
   },
   orderNowButton: {
     backgroundColor: '#003d9d',
+    paddingVertical: 10,
+    paddingHorizontal:    20,
+    borderRadius: 5,
+  },
+  fastOrderNowButton: {
+    backgroundColor: '#FFA07A',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
   },
   orderNowText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fastOrderNowText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
@@ -426,7 +470,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 15,
-    
   },
   paymentButton: {
     flex: 1,
@@ -438,8 +481,8 @@ const styles = StyleSheet.create({
   },
   selectedPayment: {
     backgroundColor: '#ecfdf5',
-    borderWidth:1,
-    borderColor:'green'
+    borderWidth: 1,
+    borderColor: 'green'
   },
   paymentText: {
     color: '#000',
@@ -477,11 +520,11 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     marginBottom: 15,
-    flexDirection:'row',
-    alignItems:'center',
-    borderBottomWidth:0.5,
-    borderColor:'black',
-    paddingHorizontal:10
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 0.5,
+    borderColor: 'black',
+    paddingHorizontal: 10
   },
   image: {
     width: 100,
@@ -495,13 +538,12 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 16,
     fontWeight: 'bold',
-    width:'70%',
-    color:'black'
-    
+    width: '70%',
+    color: 'black'
   },
   productDetails: {
     fontSize: 14,
-    color:'black'
+    color: 'black'
   },
   productPrice: {
     fontSize: 14,
@@ -517,12 +559,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'green',
     paddingHorizontal: 5,
     borderRadius: 5,
-    marginHorizontal:5
+    marginHorizontal: 5
   },
   incrementButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color:'white'
+    color: 'white'
   },
   divider: {
     height: 1,
@@ -540,6 +582,29 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     borderRadius: 5,
+  },
+  deliveryOptionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    paddingHorizontal: 20,
+  },
+  deliveryOptionButton: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#ecfdf5',
+    borderRadius: 5,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  selectedDeliveryOption: {
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: 'green'
+  },
+  deliveryOptionText: {
+    color: '#000',
+    fontWeight: '500',
   },
 });
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Text,View, Image, ScrollView, Dimensions, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { Text, View, Image, ScrollView, Dimensions, StyleSheet, Alert } from 'react-native';
 import { getBanners } from '../../utils/config';
 
 const { width } = Dimensions.get('window');
@@ -9,15 +9,16 @@ const Banners = () => {
   const [banners, setBanners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const scrollViewRef = useRef(null);
 
+  // Fetch banners data
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const { status, data } = await getBanners();
         if (status === 200 && data.length > 0) {
-          setBanners(data); // Assuming data is an array of banners
-          console.log('banner datas ',data)
+          setBanners(data);
         } else if (status === 200 && data.length === 0) {
           setError('No banners available');
         } else {
@@ -34,6 +35,18 @@ const Banners = () => {
     fetchData();
   }, []);
 
+  // Auto-scroll logic
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const nextIndex = activeIndex === banners.length - 1 ? 0 : activeIndex + 1;
+      scrollViewRef.current?.scrollTo({ x: nextIndex * width, animated: true });
+      setActiveIndex(nextIndex);
+    }, 3000); // Auto-scroll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [activeIndex, banners.length]);
+
+  // Handle manual scroll
   const handleScroll = (event) => {
     const slideIndex = Math.ceil(event.nativeEvent.contentOffset.x / width);
     if (slideIndex !== activeIndex) {
@@ -52,11 +65,14 @@ const Banners = () => {
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        snapToInterval={width} // Ensures snapping to one image per scroll
+        decelerationRate="fast"
       >
         {banners.map((banner) => (
           <Image
@@ -88,11 +104,14 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     marginBottom: 20,
+    elevation: 3,
   },
   bannerImage: {
-    width: width,
-    height: 100,
-    resizeMode: 'contain',
+    width: width - 10, // Full width minus the horizontal margin
+    height: 200,
+    resizeMode: 'cover', // Or 'contain' based on your preference
+    borderRadius: 20,    // Rounded corners
+    marginHorizontal: 5, // Horizontal margin of 5
   },
   paginationContainer: {
     position: 'absolute',

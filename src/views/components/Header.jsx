@@ -65,8 +65,9 @@ const Header = () => {
 
     return (
         <View style={styles.headerContainer}>
-            <TouchableOpacity style={styles.iconContainer} >
-                <TouchableOpacity style={styles.searchInputContainer} onPress={()=>navigation.replace('AllProduct')} >
+        
+            <TouchableOpacity style={styles.iconContainer}>
+                <TouchableOpacity style={styles.searchInputContainer} onPress={() => navigation.replace('AllProduct')}>
                     <Ionicons name="search-outline" size={20} color="#fff" style={styles.searchIcon} />
                     <Text style={styles.searchInput}>
                         Search
@@ -80,8 +81,8 @@ const Header = () => {
                     </View>
                     <Ionicons name="cart-outline" size={24} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconWrapper} onPress={handleLogout}>
-                    <Ionicons name="exit-outline" size={24} color="#fff" />
+                <TouchableOpacity style={styles.iconWrapper} onPress={() => navigation.navigate('YourOrder')}>
+                    <Ionicons name="grid-outline" size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
         </View>
@@ -110,14 +111,14 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         paddingHorizontal: 10,
         flex: 1,
-        alignItems:'center',
-        paddingVertical:7
-      },
-      searchInput: {
+        alignItems: 'center',
+        paddingVertical: 7,
+    },
+    searchInput: {
         color: '#fff',
         flex: 1,
         paddingLeft: 10,
-      },
+    },
 
     searchIcon: {
         paddingHorizontal: 10,

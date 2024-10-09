@@ -84,6 +84,7 @@ const ProductCard = () => {
           quantity: updatedQuantity,
           sell_price: product.sell_price,
           weight: 1.0,
+          delivery_option:product.delivery_option
         });
       }
       await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
@@ -129,6 +130,7 @@ const ProductCard = () => {
     const [quantity, setQuantity] = useState(0);
 
     const handleProductPress = () => {
+      console.log('clicked product',product)
       navigation.navigate('SingleProduct', { product });
     };
 
@@ -216,8 +218,9 @@ const ProductCard = () => {
 
   return (
     <View style={styles.container}>
-       <ExpandableLocationCard />
-       <Header />
+       <ExpandableLocationCard showBackButton={true} />
+       <Header  />
+
       <View style={styles.mainContent}>
         <View style={styles.sidebar}>{renderSidebar()}</View>
         <ScrollView style={styles.scrollView}>

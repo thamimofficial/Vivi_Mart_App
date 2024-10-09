@@ -116,13 +116,13 @@ const Home = () => {
         <CategoriesList onCategorySelect={setSelectedCategory} />
       </View>
 
-      <Banners />
+      
       <ScrollView
         contentContainerStyle={styles.scrollViewContainer}
         showsVerticalScrollIndicator={false}
         ref={scrollViewRef} // Set the ref
       >
-        
+        <Banners />
         {categories.map((categoryName, index) => renderCategory(categoryName, index))}
       </ScrollView>
 

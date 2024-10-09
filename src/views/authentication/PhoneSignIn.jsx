@@ -9,7 +9,7 @@ const PhoneSignIn = () => {
   const [confirm, setConfirm] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState(''); // Separate state for phone number
   const [otp, setOtp] = useState(''); // Updated for single input with 6 characters
-  const [containerHeight, setContainerHeight] = useState('30%');
+  const [containerHeight, setContainerHeight] = useState('40%');
 
   // Handle login state changes
   function onAuthStateChanged(user) {
@@ -66,10 +66,11 @@ const PhoneSignIn = () => {
       style={styles.background}
     >
       <View style={styles.container}>
+       
         <View style={[styles.whiteContainer, { height: containerHeight }]}>
           {!confirm ? (
             <>
-              <Text style={styles.title}>Enter your phone number</Text>
+              <Text style={styles.title}>Login or Signup</Text>
               <TextInput
                 style={styles.input}
                 keyboardType="phone-pad"
@@ -78,8 +79,11 @@ const PhoneSignIn = () => {
                 onChangeText={setPhoneNumber}
               />
               <TouchableOpacity style={styles.button} onPress={() => signInWithPhoneNumber(`+91${phoneNumber}`)}>
-                <Text style={styles.buttonText}>Get OTP</Text>
+                <Text style={styles.buttonText}>Continue</Text>
+
+               
               </TouchableOpacity>
+              <Text style={{textAlign:'center',marginVertical:10}}>By Continue, you agree to the Terms of use & Privacy Policy !Do you Want to create account?</Text>
             </>
           ) : (
             <>
@@ -151,7 +155,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: 'left',
     color: '#000',
   },
   input: {
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#007bff',
     paddingVertical: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: 'center'
   },
   buttonText: {
     color: '#fff',
