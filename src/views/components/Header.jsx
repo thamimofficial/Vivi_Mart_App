@@ -67,7 +67,7 @@ const Header = () => {
         <View style={styles.headerContainer}>
         
             <TouchableOpacity style={styles.iconContainer}>
-                <TouchableOpacity style={styles.searchInputContainer} onPress={() => navigation.replace('AllProduct')}>
+                <TouchableOpacity style={styles.searchInputContainer} onPress={() => navigation.navigate('AllProduct')}>
                     <Ionicons name="search-outline" size={20} color="#fff" style={styles.searchIcon} />
                     <Text style={styles.searchInput}>
                         Search

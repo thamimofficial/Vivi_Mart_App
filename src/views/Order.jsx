@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Button } from 'react-native';
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Button, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getCartProduct, placeOrder } from '../utils/config';
 import Modal from 'react-native-modal';
@@ -9,6 +9,8 @@ import RazorpayCheckout from 'react-native-razorpay';
 import ExpandableLocationCard from './components/ExpandableLocationCard';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Import Ionicons
+
+import axios from 'axios'; // Make sure to import axios
 
 const Order = () => {
   const navigation = useNavigation();
@@ -26,13 +28,33 @@ const Order = () => {
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [deliveryNotes, setDeliveryNotes] = useState('');
 
-  
+  const [locationData, setLocationData] = useState('');
   const [deliveryColor, setDeliveryColor] = useState('#d1f0d5');
 
 
   useEffect(() => {
     fetchCartItems();
 
+    const fetchStoredLocation = async () => {
+      try {
+        const storedPincode = await AsyncStorage.getItem('pin_codes');
+        const storedCityName = await AsyncStorage.getItem('city_name');
+  console.log('location in 6 sec',storedCityName,storedPincode)
+        if (storedPincode && storedCityName) {
+          setLocationData({
+            pin_codes: storedPincode,
+            city_name: storedCityName,
+          });
+          const fulladress = storedCityName
+          console.log('fulladress',fulladress)
+          setAddress(fulladress)
+        }
+      } catch (error) {
+        console.error('Failed to load location from AsyncStorage:', error);
+      }
+    };
+  
+    fetchStoredLocation()
     
   }, []);
 
@@ -137,7 +159,28 @@ const Order = () => {
     };
 
     if (paymentMethod === 'Online') {
-      createOrder();
+
+      try {
+        const result = await placeOrder(order);
+        console.log('result',result)
+        console.log('result razorpay id ',result.data.razorpayOrder.id)
+        // Alert.alert('Order Successful', result.data.message, [
+        //   {
+        //     text: 'OK',
+        //     onPress: () => {
+        //       setModalVisible(false);
+        //       AsyncStorage.removeItem('cartItems');
+        //       fetchCartItems();
+        //     },
+        //   },
+          
+        // ]);
+          createOrder(result.data.razorpayOrder.id);
+      } catch (error) {
+        Alert.alert('Order Error', error.message);
+      }
+
+    
       return;
     }
 
@@ -148,7 +191,7 @@ const Order = () => {
           text: 'OK',
           onPress: () => {
             setModalVisible(false);
-            AsyncStorage.removeItem('cartItems');
+           AsyncStorage.removeItem('cartItems');
             fetchCartItems();
           },
         },
@@ -159,32 +202,70 @@ const Order = () => {
     }
   };
 
-  const createOrder = async () => {
-    const razorpayKey = 'rzp_test_Cd1cVSHpocrBwT'; // Replace with your Razorpay key
 
+
+
+  const createOrder = async (orderId) => {
+    const razorpayKey = 'rzp_test_Cd1cVSHpocrBwT'; // Replace with your Razorpay key
+  
     const options = {
       key: razorpayKey,
-      amount: totalAmount * 100, // Convert to paise
+      amount: totalAmount * 100, // Convert to paise (INR's smallest unit)
       currency: 'INR',
       name: 'Test Company',
       description: 'Test Order',
+      order_id: orderId,  // Order ID generated from Razorpay
       prefill: {
-        name: name,
-        email: 'john@example.com',
-        contact: '9999999999',
+        name: name || 'John Doe',  // Replace with customer name or use default
+        email: 'john@example.com', // Replace with customer email
+        contact: '9999999999',     // Replace with customer phone number
       },
-      theme: { color: '#1b18c7' },
+      theme: { color: '#1b18c7' }, // Razorpay UI theme color
     };
-
-    RazorpayCheckout.open(options)
-      .then((data) => {
-        Alert.alert('Success', `Payment successful: ${data.razorpay_payment_id}`);
-      })
-      .catch((error) => {
-        Alert.alert('Error', 'Payment failed!');
-      });
+  
+    try {
+      // Open Razorpay checkout
+      RazorpayCheckout.open(options)
+        .then(async (data) => {
+          // Razorpay provides the payment details after success
+          console.log('Razorpay success data:', data);
+  
+          // Call your backend to verify the payment details
+          try {
+            const response = await axios.post('https://backend.vivimart.in/api/orders/verify-payment', {
+              razorpay_payment_id: data.razorpay_payment_id,
+              razorpay_order_id: data.razorpay_order_id,
+              razorpay_signature: data.razorpay_signature,
+            });
+  
+           
+  
+            if (response) {
+              console.log('Payment verification response:', response.data);
+              //console.log('API data',response.config)
+              Alert.alert('Success', 'Payment and order verification successful!');
+              // You can clear the cart after successful payment
+              AsyncStorage.removeItem('cartItems');
+              navigation.replace('Home')
+            } else {
+              Alert.alert('Error', 'Payment verification failed.');
+            }
+  
+          } catch (error) {
+            console.error('Payment verification failed:', error.response?.data || error.message);
+            Alert.alert('Error', 'Payment verification failed. Please try again.');
+          }
+        })
+        .catch((error) => {
+          console.error('Payment failed:', error);
+          Alert.alert('Error', 'Payment failed. Please try again.');
+        });
+    } catch (error) {
+      console.error('Error initializing Razorpay:', error.message);
+      Alert.alert('Error', 'Unable to initialize payment. Please try again.');
+    }
   };
-
+  
   const renderCartItem = ({ item }) => {
     return (
       <View style={styles.card}>
@@ -234,9 +315,9 @@ const Order = () => {
       <ExpandableLocationCard  showBackButton={true}/>
       <Header leftIconName="home-outline" />
       
-      <Text style={styles.heading}>My Cart</Text>
+      {/* <Text style={styles.heading}>My Cart</Text> */}
       
-      {cartItems.length === 0 ? (
+      {/* {cartItems.length === 0 ? (
         <>
           <Image source={require('../assets/cart.png')} style={{ width: '90%', height: '50%', resizeMode: 'contain' }} />
           <Text style={styles.emptyMessage}>Your cart is empty.</Text>
@@ -259,44 +340,8 @@ const Order = () => {
             </Text>
           </TouchableOpacity>
         </>
-      ) : (
-      //   <>
-      //   <View style={styles.deliveryOptionContainer}>
-      //     <TouchableOpacity
-      //       style={[styles.deliveryOptionButton, deliveryOption === 'Standard Delivery' && styles.selectedDeliveryOption]}
-      //       onPress={() => setDeliveryOption('Standard Delivery')}
-      //     >
-      //       <Text style={styles.deliveryOptionText}>Standard Delivery</Text>
-      //     </TouchableOpacity>
-      //     <TouchableOpacity
-      //       style={[styles.deliveryOptionButton, deliveryOption === 'Fast Delivery' && styles.selectedDeliveryOption]}
-      //       onPress={() => setDeliveryOption('Fast Delivery')}
-      //     >
-      //       <Text style={styles.deliveryOptionText}>Fast Delivery</Text>
-      //     </TouchableOpacity>
-      //   </View>
-      //   <FlatList
-      //     data={cartItems}
-      //     renderItem={renderCartItem}
-      //     keyExtractor={(item) => item.product_id}
-      //     contentContainerStyle={{ paddingBottom: 100 }}
-      //     showsVerticalScrollIndicator={false}
-      //   />
-
-      //   <View style={styles.bottomContainer}>
-      //     <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
-      //     {deliveryOption === 'Standard Delivery' ? (
-      //       <TouchableOpacity style={styles.orderNowButton} onPress={() => setModalVisible(true)}>
-      //         <Text style={styles.orderNowText}>Order Now</Text>
-      //       </TouchableOpacity>
-      //     ) : (
-      //       <TouchableOpacity style={styles.fastOrderNowButton} onPress={() => setModalVisible(true)}>
-      //         <Text style={styles.fastOrderNowText}>Order Now</Text>
-      //       </TouchableOpacity>
-      //     )}
-      //   </View>
-      // </>
-        <>
+      ) : ( */}
+<ScrollView>
           <View style={styles.deliveryOptionContainer}>
             <TouchableOpacity
               style={[styles.deliveryOptionButton, deliveryOption === 'Standard Delivery' && styles.selectedDeliveryOption]}
@@ -329,7 +374,7 @@ const Order = () => {
             </TouchableOpacity>
           </View> */}
         
-        <View style={{marginHorizontal:10,marginVertical:5,elevation:3,backgroundColor:'white',padding:10,borderRadius:10,maxHeight:'40%'}}>
+        <View style={{marginHorizontal:10,marginVertical:5,elevation:3,backgroundColor:'white',padding:10,borderRadius:10,}}>
 
 
    
@@ -355,14 +400,90 @@ const Order = () => {
                   </TouchableOpacity>
                   </View>
             )}
+{deliveryOption === 'Standard Delivery' ? (
+  cartItems
+    .filter(item => item.delivery_option === 'Standard Delivery') // Filter for Standard Delivery items
+    .map(item => (
+      <View style={styles.card} key={item.product_id}>
+        <Image
+          source={{
+            uri: item.Prodouct_img || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNNLEL-qmmLeFR1nxJuepFOgPYfnwHR56vcw&s',
+          }}
+          style={styles.image}
+        />
+        <View style={styles.details}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ width: '60%' }}>
+              <Text style={styles.productName} numberOfLines={1}>{item.Product_name}</Text>
+              <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
+              <Text style={styles.productPrice}>Price: ₹{(item.sell_price * item.quantity).toFixed(2)}</Text>
+            </View>
+
+            <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={styles.quantityContainer}>
+                {item.quantity === 1 ? (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => removeFromCart(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => decrementQuantity(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                )}
+                <Text style={styles.productDetails}>{item.quantity}</Text>
+                <TouchableOpacity style={styles.incrementButton} onPress={() => incrementQuantity(item.product_id)}>
+                  <Text style={styles.incrementButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    ))
+) : (
+  cartItems
+    .filter(item => item.delivery_option === 'Fast Delivery') // Filter for Fast Delivery items
+    .map(item => (
+      <View style={styles.card} key={item.product_id}>
+        <Image
+          source={{
+            uri: item.Prodouct_img || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNNLEL-qmmLeFR1nxJuepFOgPYfnwHR56vcw&s',
+          }}
+          style={styles.image}
+        />
+        <View style={styles.details}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ width: '60%' }}>
+              <Text style={styles.productName} numberOfLines={1}>{item.Product_name}</Text>
+              <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
+              <Text style={styles.productPrice}>Price: ₹{(item.sell_price * item.quantity).toFixed(2)}</Text>
+            </View>
+
+            <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <View style={styles.quantityContainer}>
+                {item.quantity === 1 ? (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => removeFromCart(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.incrementButton} onPress={() => decrementQuantity(item.product_id)}>
+                    <Text style={styles.incrementButtonText}>−</Text>
+                  </TouchableOpacity>
+                )}
+                <Text style={styles.productDetails}>{item.quantity}</Text>
+                <TouchableOpacity style={styles.incrementButton} onPress={() => incrementQuantity(item.product_id)}>
+                  <Text style={styles.incrementButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    ))
+)}
 
 
-          <FlatList
-            data={filteredItems}
-            renderItem={renderCartItem}
-            keyExtractor={item => item.product_id.toString()}
-            showsVerticalScrollIndicator={false}
-          />
+
           </View>
 
           <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white'}}>
@@ -401,10 +522,14 @@ const Order = () => {
 
 
 
-          <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white',}}>
+          <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white',marginBottom:100}}>
           <Text style={{textAlign:'left',color:'black',fontWeight:'700',}}>Cancellation Policy</Text>
           <Text style={{textAlign:'left',color:'gray',fontWeight:'500',}}>Orders cannot be cancelled once packed for delivery. In case of unexpected delays, a refund will be provided, if applicable.</Text>
           </View>
+
+
+          </ScrollView>
+
 
         <View style={styles.bottomContainer}>
             <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
@@ -418,8 +543,7 @@ const Order = () => {
               </TouchableOpacity>
             )}
           </View>
-        </>
-      )}
+      {/* )} */}
 
 
 
@@ -687,6 +811,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     borderRadius: 5,
+    color:'#000'
   },
   deliveryOptionContainer: {
     flexDirection: 'row',

@@ -125,8 +125,8 @@ export default function MapScreen() {
         initialRegion={{
           latitude: coordinates.latitude,
           longitude: coordinates.longitude,
-          latitudeDelta: 0.0622,
-          longitudeDelta: 0.0121,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
         }}
         onPress={handleMapPress} // Add onPress event to the MapView
       >
