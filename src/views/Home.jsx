@@ -99,7 +99,7 @@ const Home = () => {
                 navigation.navigate('ProductCard', { productDetails: item }); // Pass product details when navigating
               }}
             >
-              <Image source={{ uri: item.sub_category_img }} style={styles.cardImage} />
+              <Image source={{ uri: item.sub_category_img||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723' }} style={styles.cardImage} />
               <Text style={styles.cardText} numberOfLines={2}>{item.sub_category_name}</Text>
             </TouchableOpacity>
           ))}

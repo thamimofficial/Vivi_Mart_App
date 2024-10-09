@@ -102,6 +102,7 @@ const AllProduct = ({ navigation }) => {
           quantity,
           sell_price: productsData.find(product => product.Product_id === productId).sell_price,
           weight: 1.0,
+          delivery_option:productsData.find(product => product.Product_id === productId).delivery_option,
         });
       }
 
@@ -133,7 +134,7 @@ const AllProduct = ({ navigation }) => {
 
   const renderProductCard = ({ item }) => (
     <View key={item.Product_id} style={styles.card}>
-    <Image source={{ uri: item.Prodouct_img_0 }} style={styles.productImage} />
+    <Image source={{ uri: item.Prodouct_img_0 ||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723'}} style={styles.productImage} />
     <View style={styles.productDetails}>
       <Text style={styles.productName}>{item.Product_name}</Text>
       <Text style={styles.productPrice}>Sell Price: ₹{item.sell_price}</Text>
@@ -149,14 +150,16 @@ const AllProduct = ({ navigation }) => {
         <Ionicons name="add" size={20} color="#fff" style={{fontSize:18,color:'black', fontWeight:'bold',paddingLeft:10}} />
         </TouchableOpacity>
       ) : (
-        <View style={{flexDirection:'row',justifyContent:'space-evenly'}}>
-          <TouchableOpacity onPress={() => decrementQuantity(item.Product_id)} disabled={quantities[item.Product_id] === 0}>
-            <Ionicons name="remove-circle-outline" size={24} color="#ff0000" />
-          </TouchableOpacity>
-          <Text style={styles.quantityText}>{quantities[item.Product_id]}</Text>
-          <TouchableOpacity onPress={() => incrementQuantity(item.Product_id)}>
-            <Ionicons name="add-circle-outline" size={24} color="#00ff00" />
-          </TouchableOpacity>
+       <View style={styles.quantityContainer}>
+        <TouchableOpacity onPress={() => decrementQuantity(item.Product_id)} style={styles.quantityButton}>
+          {/* <Text >-</Text> */}
+          <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.quantityText}>{quantities[item.Product_id]}</Text>
+        <TouchableOpacity onPress={() => incrementQuantity(item.Product_id)} style={styles.quantityButton}>
+          {/* <Text style={styles.quantityButtonText}>+</Text> */}
+          <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
+        </TouchableOpacity>
         </View>
       )}
     </View>
@@ -166,7 +169,7 @@ const AllProduct = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ExpandableLocationCard />
+      <ExpandableLocationCard showBackButton={true} />
       <View style={styles.headerContainer}>
         <View style={styles.iconContainer}>
           <View style={styles.searchInputContainer}>
@@ -187,9 +190,9 @@ const AllProduct = ({ navigation }) => {
             </View>
             <Ionicons name="cart-outline" size={24} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconWrapper} onPress={handleLogout}>
-            <Ionicons name="exit-outline" size={24} color="#fff" />
-          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconWrapper} onPress={() => navigation.navigate('YourOrder')}>
+                    <Ionicons name="grid-outline" size={24} color="#fff" />
+                </TouchableOpacity>
         </View>
       </View>
 <View style={{marginTop:10}}>   
@@ -327,6 +330,22 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: 'black',
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quantityButton: {
+    backgroundColor: '#318616',
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  quantityButtonText: {
+    color: '#fff',
+    fontSize: 10,
     fontWeight: 'bold',
   },
 });

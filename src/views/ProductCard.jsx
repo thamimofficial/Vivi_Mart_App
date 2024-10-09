@@ -137,7 +137,7 @@ const ProductCard = () => {
     return (
       <TouchableOpacity style={styles.card} onPress={handleProductPress}>
         <Text style={styles.productOffer}>{`₹${product.offer}`}</Text>
-        <Image source={{ uri: product.Prodouct_img_0 }} style={styles.image} />
+        <Image source={{ uri: product.Prodouct_img_0  ||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723'}} style={styles.image} />
         <View style={styles.details}>
           <Text style={styles.brandName}>{product.Brand_name}</Text>
           <Text style={styles.productName} numberOfLines={1}>{product.Product_name}</Text>
@@ -156,11 +156,13 @@ const ProductCard = () => {
           ) : (
             <View style={styles.quantityContainer}>
               <TouchableOpacity onPress={() => decrementQuantity(product, quantity, setQuantity)} style={styles.quantityButton}>
-                <Text style={styles.quantityButtonText}>-</Text>
+                {/* <Text >-</Text> */}
+                <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity onPress={() => incrementQuantity(product, quantity, setQuantity)} style={styles.quantityButton}>
-                <Text style={styles.quantityButtonText}>+</Text>
+                {/* <Text style={styles.quantityButtonText}>+</Text> */}
+                <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
           )}

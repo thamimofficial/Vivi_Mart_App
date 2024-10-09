@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } fr
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from './components/Header';
+import ExpandableLocationCard from './components/ExpandableLocationCard';
 
 const SingleProduct = ({ route }) => {
   const { product } = route.params; // Get the product details from route params
@@ -79,11 +80,12 @@ const SingleProduct = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      <ExpandableLocationCard showBackButton={true} />
       <Header />
       <ScrollView>
         {/* Product Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: product.Prodouct_img_0 }} style={styles.image} />
+          <Image source={{ uri: product.Prodouct_img_0 ||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723'}} style={styles.image} />
         </View>
 
         {/* Product Details */}
@@ -104,11 +106,11 @@ const SingleProduct = ({ route }) => {
           ) : (
             <View style={styles.quantityContainer}>
               <TouchableOpacity style={styles.quantityButton} onPress={decreaseQuantity}>
-                <Ionicons name="remove-outline" size={24} color="#fff" />
+              <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity style={styles.quantityButton} onPress={increaseQuantity}>
-                <Ionicons name="add-outline" size={24} color="#fff" />
+              <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
           )}
@@ -208,13 +210,19 @@ const styles = StyleSheet.create({
     marginTop: 15,
   },
   quantityButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 50,
-    padding: 10,
+    backgroundColor: '#318616',
+    paddingVertical:5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
   },
   quantityText: {
     fontSize: 18,
     marginHorizontal: 15,
+  },
+  quantityButtonText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   infoSection: {
     flexDirection: 'row',

@@ -179,7 +179,7 @@ console.log('location data',data)
       <View style={{flexDirection:"row", alignItems:'center'}}>
       {showBackButton && (
                 <TouchableOpacity style={{color:'white',backgroundColor:'#1c44fc',padding:7.5,width:'10%',marginLeft:45}} onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                    <Ionicons name="chevron-back" size={24} color="#fff" />
                 </TouchableOpacity>
             )}
 

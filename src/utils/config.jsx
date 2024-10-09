@@ -327,3 +327,37 @@ export const getAllProduct = async () => {
     throw error;
   }
 };
+
+
+
+export const getYourOrders = async (phone_number) => {
+  // No need to encode phone_number since it's passed as a query parameter
+  const url = `${BASE_URL}/orders/order-by-phone?phone_number=${phone_number}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add any other required headers here if needed, such as authorization tokens
+      },
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorText}`);
+    }
+
+    // Return both status code and response data
+    return {
+      status: response.status,
+      data: responseData,
+    };
+  } catch (error) {
+    console.error('Orders API error:', error.message);
+    // Re-throw the error if needed
+    throw error;
+  }
+};

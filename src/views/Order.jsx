@@ -8,6 +8,7 @@ import Header from './components/Header';
 import RazorpayCheckout from 'react-native-razorpay';
 import ExpandableLocationCard from './components/ExpandableLocationCard';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons'; // Import Ionicons
 
 const Order = () => {
   const navigation = useNavigation();
@@ -25,8 +26,14 @@ const Order = () => {
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [deliveryNotes, setDeliveryNotes] = useState('');
 
+  
+  const [deliveryColor, setDeliveryColor] = useState('#d1f0d5');
+
+
   useEffect(() => {
     fetchCartItems();
+
+    
   }, []);
 
   useEffect(() => {
@@ -193,7 +200,6 @@ const Order = () => {
               <Text style={styles.productName} numberOfLines={1}>{item.Product_name}</Text>
               <Text style={styles.productDetails}>Quantity: {item.quantity}</Text>
               <Text style={styles.productPrice}>Price: ₹{(item.sell_price * item.quantity).toFixed(2)}</Text>
-              <Text style={styles.productPrice}>Option: {item.delivery_option}</Text>
             </View>
 
             <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -215,16 +221,21 @@ const Order = () => {
             </View>
           </View>
         </View>
-        <View style={styles.divider} />
+        {/* <View style={styles.divider} /> */}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <ExpandableLocationCard />
+    <View style={[styles.container,{ backgroundColor:deliveryColor,}]}>
+
+
+      
+      <ExpandableLocationCard  showBackButton={true}/>
       <Header leftIconName="home-outline" />
+      
       <Text style={styles.heading}>My Cart</Text>
+      
       {cartItems.length === 0 ? (
         <>
           <Image source={require('../assets/cart.png')} style={{ width: '90%', height: '50%', resizeMode: 'contain' }} />
@@ -289,22 +300,112 @@ const Order = () => {
           <View style={styles.deliveryOptionContainer}>
             <TouchableOpacity
               style={[styles.deliveryOptionButton, deliveryOption === 'Standard Delivery' && styles.selectedDeliveryOption]}
-              onPress={() => setDeliveryOption('Standard Delivery')}
+              onPress={() => {setDeliveryOption('Standard Delivery') 
+                setDeliveryColor('#d1f0d5');
+              }}
             >
               <Text style={styles.deliveryOptionText}>Standard Delivery</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.deliveryOptionButton, deliveryOption === 'Fast Delivery' && styles.selectedDeliveryOption]}
-              onPress={() => setDeliveryOption('Fast Delivery')}
+              style={[styles.deliveryOptionButton, deliveryOption === 'Fast Delivery' && styles.selectedDeliveryOptionFast]}
+              onPress={() => {
+                setDeliveryOption('Fast Delivery');
+                setDeliveryColor('#f1c992'); // Set the color to red or whatever color you want
+              }}
+              
             >
               <Text style={styles.deliveryOptionText}>Fast Delivery</Text>
             </TouchableOpacity>
           </View>
+
+          {/* <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white',flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+            <View style={{flexDirection:"row",alignItems:'center'}}>
+              <Ionicons name="timer-outline" size={25} color="black" />
+              <Text style={{fontWeight:'700',color:'black',marginLeft:10}}>Fast Delivery</Text>
+            </View>
+            <TouchableOpacity onPress={()=>navigation.replace('Home')}>
+            <Text style={{fontWeight:'900',color:'green',fontSize:16}}>Add More</Text>
+            </TouchableOpacity>
+          </View> */}
+        
+        <View style={{marginHorizontal:10,marginVertical:5,elevation:3,backgroundColor:'white',padding:10,borderRadius:10,maxHeight:'40%'}}>
+
+
+   
+
+            {deliveryOption === 'Standard Delivery' ? (
+                 <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:5}}>
+                 <View style={{flexDirection:"row",alignItems:'center'}}>
+                       <Ionicons name="timer-outline" size={25} color="black" />
+                       <Text style={{fontWeight:'700',color:'black',marginLeft:10}}>Standard Delivery</Text>
+                     </View>
+                     <TouchableOpacity onPress={()=>navigation.replace('Home')}>
+                     <Text style={{fontWeight:'900',color:'green',fontSize:16}}>Add More</Text>
+                     </TouchableOpacity>
+                     </View>
+            ) : (
+              <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',padding:5}}>
+              <View style={{flexDirection:"row",alignItems:'center'}}>
+                    <Ionicons name="timer-outline" size={25} color="black" />
+                    <Text style={{fontWeight:'700',color:'black',marginLeft:10}}>Fast Delivery</Text>
+                  </View>
+                  <TouchableOpacity onPress={()=>navigation.replace('Home')}>
+                  <Text style={{fontWeight:'900',color:'green',fontSize:16}}>Add More</Text>
+                  </TouchableOpacity>
+                  </View>
+            )}
+
+
           <FlatList
             data={filteredItems}
             renderItem={renderCartItem}
             keyExtractor={item => item.product_id.toString()}
+            showsVerticalScrollIndicator={false}
           />
+          </View>
+
+          <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white'}}>
+            <Text style={{textAlign:'left',fontSize:16,color:'black',fontWeight:'700',paddingVertical:4}}>Bill Details</Text>
+
+           <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:4}}>
+            <View style={{flexDirection:'row',alignItems:'center'}}>
+              <Ionicons name="list-circle-outline" size={20} color="black" />
+              <Text style={{paddingLeft:5,color:'#474747'}} >Items total</Text>
+            </View>
+             <Text>₹{totalAmount}</Text>
+           </View>
+
+           <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:4}}>
+            <View style={{flexDirection:'row',alignItems:'center'}}>
+              <MaterialIcons name="directions-bike" size={20} color="black" />
+              <Text style={{paddingLeft:5,color:'#474747'}} >Items total</Text>
+            </View>
+             <Text  style={{color:'green'}}>Free</Text>
+           </View>
+
+           <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:4}}>
+            <View style={{flexDirection:'row',alignItems:'center'}}>
+              <Ionicons name="bag-handle-outline" size={20} color="black" />
+              <Text style={{paddingLeft:5,color:'#474747'}}>Items total</Text>
+            </View>
+             <Text style={{color:'green'}}>Free</Text>
+           </View>
+
+           <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:4}}>
+              <Text style={{textAlign:'left',fontSize:16,color:'black',fontWeight:'700'}}>Grand total</Text>
+             <Text style={{fontSize:16,color:'black',fontWeight:'700'}}>₹{totalAmount}</Text>
+           </View>
+
+          </View>
+
+
+
+          <View style={{marginHorizontal:10,marginVertical:5,padding:15, elevation:3,borderRadius:10,backgroundColor:'white',}}>
+          <Text style={{textAlign:'left',color:'black',fontWeight:'700',}}>Cancellation Policy</Text>
+          <Text style={{textAlign:'left',color:'gray',fontWeight:'500',}}>Orders cannot be cancelled once packed for delivery. In case of unexpected delays, a refund will be provided, if applicable.</Text>
+          </View>
+
         <View style={styles.bottomContainer}>
             <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
             {deliveryOption === 'Standard Delivery' ? (
@@ -390,14 +491,12 @@ const Order = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   heading: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 20,
     color: 'black',
-    margin: 10
+    marginHorizontal:10,marginVertical:5,marginTop:10
   },
   emptyMessage: {
     textAlign: 'center',
@@ -407,28 +506,35 @@ const styles = StyleSheet.create({
     color: 'black'
   },
   bottomContainer: {
+    position: 'absolute', // Make it stick to the bottom
+    bottom: 10, // Align to the bottom of the screen
+    left: 10, // Ensure it spans the full width
+    right: 10, // Ensure it spans the full width
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 16,
+    padding: 20,
     borderTopWidth: 1,
     borderTopColor: '#ccc',
-    paddingTop: 16,
-    padding: 20
+    backgroundColor: '#fff', // Add background color to make it visible if needed
+    borderRadius:10,
+    elevation:3
   },
+
   totalText: {
     fontSize: 18,
     fontWeight: '900',
     color: 'black'
   },
   orderNowButton: {
-    backgroundColor: '#003d9d',
+    backgroundColor: '#0c831f',
     paddingVertical: 10,
     paddingHorizontal:    20,
     borderRadius: 5,
   },
   fastOrderNowButton: {
-    backgroundColor: '#FFA07A',
+    backgroundColor: '#f74e11',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
@@ -519,12 +625,11 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    marginBottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 0.5,
-    borderColor: 'black',
-    paddingHorizontal: 10
+    // paddingHorizontal: 10,
+    // marginHorizontal:10,
+    // elevation:3
   },
   image: {
     width: 100,
@@ -548,7 +653,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FF6347',
+    color: 'green',
   },
   quantityContainer: {
     flexDirection: 'row',
@@ -586,21 +691,27 @@ const styles = StyleSheet.create({
   deliveryOptionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
+    marginBottom: 5,
     paddingHorizontal: 20,
+    backgroundColor:'white',
+    padding:10,
+    margin:10,
+    elevation:3,
+    borderRadius:10
   },
   deliveryOptionButton: {
     flex: 1,
     padding: 15,
-    backgroundColor: '#ecfdf5',
+    backgroundColor: 'white',
     borderRadius: 5,
     alignItems: 'center',
     marginHorizontal: 5,
   },
   selectedDeliveryOption: {
     backgroundColor: '#ecfdf5',
-    borderWidth: 1,
-    borderColor: 'green'
+  },
+  selectedDeliveryOptionFast: {
+    backgroundColor: '#f1c992',
   },
   deliveryOptionText: {
     color: '#000',
