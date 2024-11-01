@@ -81,9 +81,9 @@ const Header = () => {
                     </View>
                     <Ionicons name="cart-outline" size={24} color="#fff" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconWrapper} onPress={() => navigation.navigate('YourOrder')}>
+                {/* <TouchableOpacity style={styles.iconWrapper} onPress={() => navigation.navigate('YourOrder')}>
                     <Ionicons name="grid-outline" size={24} color="#fff" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
         </View>
     );

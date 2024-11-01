@@ -202,10 +202,173 @@ const Order = () => {
     }
   };
 
+  const handlePlaceOrderFastDelivery = async () => {
+    if (!name || !address) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+  
+    const location_id = await AsyncStorage.getItem('location_id');
+    const phone_number = await AsyncStorage.getItem('phoneNumber');
+  
+    // Filter items that have 'Fast Delivery' as the delivery option
+    const fastDeliveryItems = filteredItems.filter(
+      (item) => item.delivery_option === 'Fast Delivery'
+    );
+  
+    if (fastDeliveryItems.length === 0) {
+      Alert.alert('Error', 'No items with Fast Delivery option available.');
+      return;
+    }
+  
+    const order = {
+      location: location_id || 1,
+      cartItems: fastDeliveryItems.map(item => ({
+        Product_name: item.Product_name,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        sell_price: item.sell_price,
+        weight: item.weight,
+      })),
+      address: address,
+      phone_number: phone_number || '+919361879529',
+      payment_method: paymentMethod,
+      delivery_notes: deliveryNotes,
+      delivery_option: 'Fast Delivery',
+    };
+  
+    if (paymentMethod === 'Online') {
+      try {
+        const result = await placeOrder(order);
+        console.log('result', result);
+        console.log('result razorpay id ', result.data.razorpayOrder.id);
+  
+        // Proceed with the Razorpay order creation
+        createOrderFastDelivery(result.data.razorpayOrder.id);
+      } catch (error) {
+        Alert.alert('Order Error', error.message);
+      }
+  
+      return;
+    }
+  
+    // Handle other payment methods
+    try {
+      const result = await placeOrder(order);
+      Alert.alert('Order Successful', result.data.message, [
+        {
+          text: 'OK',
+          onPress: async () => {
+            setModalVisible(false);
+  
+            // Fetch current cart items from AsyncStorage
+            const currentCart = await AsyncStorage.getItem('cartItems');
+            let updatedCart = JSON.parse(currentCart) || [];
+  
+            // Remove items with 'Fast Delivery' from the cart
+            updatedCart = updatedCart.filter(
+              (item) => item.delivery_option !== 'Fast Delivery'
+            );
+  
+            // Update AsyncStorage with the remaining items
+            await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+  
+            // Refresh cart items in the UI
+            fetchCartItems();
+          },
+        },
+      ]);
+      navigation.navigate('Home');
+    } catch (error) {
+      Alert.alert('Order Error', error.message);
+    }
+  };
+  
+  
+  const handlePlaceOrderStandardDelivery = async () => {
+    if (!name || !address) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+  
+    const location_id = await AsyncStorage.getItem('location_id');
+    const phone_number = await AsyncStorage.getItem('phoneNumber');
+  
+    // Filter items that have 'Standard Delivery' as the delivery option
+    const standardDeliveryItems = filteredItems.filter(
+      (item) => item.delivery_option === 'Standard Delivery'
+    );
+  
+    if (standardDeliveryItems.length === 0) {
+      Alert.alert('Error', 'No items with Standard Delivery option available.');
+      return;
+    }
+  
+    const order = {
+      location: location_id || 1,
+      cartItems: standardDeliveryItems.map(item => ({
+        Product_name: item.Product_name,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        sell_price: item.sell_price,
+        weight: item.weight,
+      })),
+      address: address,
+      phone_number: phone_number || '+919361879529',
+      payment_method: paymentMethod,
+      delivery_notes: deliveryNotes,
+      delivery_option: 'Standard Delivery',
+    };
+  
+    if (paymentMethod === 'Online') {
+      try {
+        const result = await placeOrder(order);
+        console.log('result', result);
+        console.log('result razorpay id ', result.data.razorpayOrder.id);
+  
+        // Proceed with the Razorpay order creation
+        createOrderStandardDelivery(result.data.razorpayOrder.id);
+      } catch (error) {
+        Alert.alert('Order Error', error.message);
+      }
+  
+      return;
+    }
+  
+    // Handle other payment methods
+    try {
+      const result = await placeOrder(order);
+      Alert.alert('Order Successful', result.data.message, [
+        {
+          text: 'OK',
+          onPress: async () => {
+            setModalVisible(false);
+  
+            // Fetch current cart items from AsyncStorage
+            const currentCart = await AsyncStorage.getItem('cartItems');
+            let updatedCart = JSON.parse(currentCart) || [];
+  
+            // Remove items with 'Standard Delivery' from the cart
+            updatedCart = updatedCart.filter(
+              (item) => item.delivery_option !== 'Standard Delivery'
+            );
+  
+            // Update AsyncStorage with the remaining items
+            await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+  
+            // Refresh cart items in the UI
+            fetchCartItems();
+          },
+        },
+      ]);
+      navigation.navigate('Home');
+    } catch (error) {
+      Alert.alert('Order Error', error.message);
+    }
+  };
+  
 
-
-
-  const createOrder = async (orderId) => {
+  const createOrderFastDelivery = async (orderId) => {
     const razorpayKey = 'rzp_test_Cd1cVSHpocrBwT'; // Replace with your Razorpay key
   
     const options = {
@@ -245,7 +408,96 @@ const Order = () => {
               //console.log('API data',response.config)
               Alert.alert('Success', 'Payment and order verification successful!');
               // You can clear the cart after successful payment
-              AsyncStorage.removeItem('cartItems');
+        
+            // Fetch current cart items from AsyncStorage
+            const currentCart = await AsyncStorage.getItem('cartItems');
+            let updatedCart = JSON.parse(currentCart) || [];
+  
+            // Remove items with 'Fast Delivery' from the cart
+            updatedCart = updatedCart.filter(
+              (item) => item.delivery_option !== 'Fast Delivery'
+            );
+  
+            // Update AsyncStorage with the remaining items
+            await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+  
+            // Refresh cart items in the UI
+            fetchCartItems();
+            
+              navigation.replace('Home')
+            } else {
+              Alert.alert('Error', 'Payment verification failed.');
+            }
+  
+          } catch (error) {
+            console.error('Payment verification failed:', error.response?.data || error.message);
+            Alert.alert('Error', 'Payment verification failed. Please try again.');
+          }
+        })
+        .catch((error) => {
+          console.error('Payment failed:', error);
+          Alert.alert('Error', 'Payment failed. Please try again.');
+        });
+    } catch (error) {
+      console.error('Error initializing Razorpay:', error.message);
+      Alert.alert('Error', 'Unable to initialize payment. Please try again.');
+    }
+  };
+
+  const createOrderStandardDelivery = async (orderId) => {
+    const razorpayKey = 'rzp_test_Cd1cVSHpocrBwT'; // Replace with your Razorpay key
+  
+    const options = {
+      key: razorpayKey,
+      amount: totalAmount * 100, // Convert to paise (INR's smallest unit)
+      currency: 'INR',
+      name: 'Test Company',
+      description: 'Test Order',
+      order_id: orderId,  // Order ID generated from Razorpay
+      prefill: {
+        name: name || 'John Doe',  // Replace with customer name or use default
+        email: 'john@example.com', // Replace with customer email
+        contact: '9999999999',     // Replace with customer phone number
+      },
+      theme: { color: '#1b18c7' }, // Razorpay UI theme color
+    };
+  
+    try {
+      // Open Razorpay checkout
+      RazorpayCheckout.open(options)
+        .then(async (data) => {
+          // Razorpay provides the payment details after success
+          console.log('Razorpay success data:', data);
+  
+          // Call your backend to verify the payment details
+          try {
+            const response = await axios.post('https://backend.vivimart.in/api/orders/verify-payment', {
+              razorpay_payment_id: data.razorpay_payment_id,
+              razorpay_order_id: data.razorpay_order_id,
+              razorpay_signature: data.razorpay_signature,
+            });
+  
+           
+  
+            if (response) {
+              console.log('Payment verification response:', response.data);
+              //console.log('API data',response.config)
+              Alert.alert('Success', 'Payment and order verification successful!');
+              // You can clear the cart after successful payment
+                 // Fetch current cart items from AsyncStorage
+            const currentCart = await AsyncStorage.getItem('cartItems');
+            let updatedCart = JSON.parse(currentCart) || [];
+  
+            // Remove items with 'Standard Delivery' from the cart
+            updatedCart = updatedCart.filter(
+              (item) => item.delivery_option !== 'Standard Delivery'
+            );
+  
+            // Update AsyncStorage with the remaining items
+            await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
+  
+            fetchCartItems()
+            
               navigation.replace('Home')
             } else {
               Alert.alert('Error', 'Payment verification failed.');
@@ -312,8 +564,8 @@ const Order = () => {
 
 
       
-      <ExpandableLocationCard  showBackButton={true}/>
-      <Header leftIconName="home-outline" />
+      {/* <ExpandableLocationCard  showBackButton={true}/>
+      <Header leftIconName="home-outline" /> */}
       
       {/* <Text style={styles.heading}>My Cart</Text> */}
       
@@ -494,7 +746,7 @@ const Order = () => {
               <Ionicons name="list-circle-outline" size={20} color="black" />
               <Text style={{paddingLeft:5,color:'#474747'}} >Items total</Text>
             </View>
-             <Text>₹{totalAmount}</Text>
+             <Text style={{color:'gray'}}>₹{totalAmount}</Text>
            </View>
 
            <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingVertical:4}}>
@@ -531,7 +783,17 @@ const Order = () => {
           </ScrollView>
 
 
+<View>
+     
         <View style={styles.bottomContainer}>
+          <View style={{marginBottom:20,flexDirection:'row',alignItems:'center',justifyContent:'space-between'}}>
+       <Text style={{color:'black',fontSize:14,fontWeight:'700'}}>Change Your Delivery Address</Text>
+       <TouchableOpacity>
+       <Text style={{color:'blue'}}>Change</Text>
+       </TouchableOpacity>
+       </View>
+
+       <View style={{flexDirection:"row",alignItems:'center',justifyContent:'space-between'}}>
             <Text style={styles.totalText}>Total: ₹{totalAmount}</Text>
             {deliveryOption === 'Standard Delivery' ? (
               <TouchableOpacity style={styles.orderNowButton} onPress={() => setModalVisible(true)}>
@@ -542,6 +804,9 @@ const Order = () => {
                 <Text style={styles.fastOrderNowText}>Order Now</Text>
               </TouchableOpacity>
             )}
+       </View>
+
+          </View>
           </View>
       {/* )} */}
 
@@ -582,26 +847,39 @@ const Order = () => {
             placeholder="Your Name"
             value={name}
             onChangeText={setName}
-            placeholderTextColor="#888"
+            placeholderTextColor="#000"
           />
+
+           <TouchableOpacity onPress={()=>navigation.navigate('GooglePlacesAutocomplete')}>
+            <Text style={{textAlign:'right',fontWeight:'700',color:'blue'}}>Get Location</Text>
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             placeholder="Your Address"
             value={address}
             onChangeText={setAddress}
-            placeholderTextColor="#888"
+            placeholderTextColor="#000"
           />
+          
+
           <TextInput
             style={styles.input}
             placeholder="Delivery Notes"
             value={deliveryNotes}
             onChangeText={setDeliveryNotes}
-            placeholderTextColor="#888"
+            placeholderTextColor="#000"
           />
 
-          <TouchableOpacity style={styles.modalButton} onPress={handlePlaceOrder}>
-            <Text style={styles.modalButtonText}>Place Order</Text>
-          </TouchableOpacity>
+          
+          {deliveryOption === 'Standard Delivery' ? (
+                <TouchableOpacity style={styles.modalButton} onPress={handlePlaceOrderStandardDelivery}>
+                <Text style={styles.modalButtonText}>Place Order</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.modalButton} onPress={handlePlaceOrderFastDelivery}>
+              <Text style={styles.modalButtonText}>Place Order</Text>
+            </TouchableOpacity>
+            )}
 
           <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
             <Text style={styles.closeModalButtonText}>Close</Text>
@@ -634,9 +912,9 @@ const styles = StyleSheet.create({
     bottom: 10, // Align to the bottom of the screen
     left: 10, // Ensure it spans the full width
     right: 10, // Ensure it spans the full width
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    // flexDirection: 'row',
+    // justifyContent: 'space-between',
+    // alignItems: 'center',
     paddingTop: 16,
     padding: 20,
     borderTopWidth: 1,

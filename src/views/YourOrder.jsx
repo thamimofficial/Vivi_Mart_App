@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, Image, FlatList, StyleSheet, ActivityIndicator, Animated, TouchableOpacity, SafeAreaView } from 'react-native';
 import Header from './components/Header'; // Assuming you have a custom header component
 import { getYourOrders } from '../utils/config'; // Your API call
 import ExpandableLocationCard from './components/ExpandableLocationCard';
+import Bottom from './bottom';
 
 const YourOrder = () => {
   const [yourOrderData, setYourOrderData] = useState([]); // Define state for orders
   const [loading, setLoading] = useState(false); // To handle loading state
   const [errorMessage, setErrorMessage] = useState(''); // To handle error messages
-
   const skeletonOpacity = new Animated.Value(0.5); // Opacity for skeleton loading effect
+  const [expandedOrders, setExpandedOrders] = useState({}); // State to track expanded orders
 
   // Fetch the orders using useEffect
   useEffect(() => {
@@ -22,7 +23,8 @@ const YourOrder = () => {
           setYourOrderData(response.data); // Assuming response.data contains the order list
           console.log('Your Orders', response.data);
         } else if (response.status === 404 || response.status === 400 || response.status === 401) {
-          setErrorMessage('No orders found.');
+          setErrorMessage(response.data.error);
+          console.log('response error YourOrders', response.data.error);
         }
       } catch (error) {
         console.error('Failed to fetch orders:', error);
@@ -72,38 +74,62 @@ const YourOrder = () => {
   // Render each order item (list of products for each order)
   const renderOrderItems = ({ item }) => (
     <View style={styles.orderItemContainer}>
-      <Image 
-        source={{ uri: item.item_product_image_0 || 'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723' }} 
-        style={styles.productImage} 
+      <Image
+        source={{ uri: item.product_image_0 || 'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723' }}
+        style={styles.productImage}
       />
       <View style={styles.itemDetails}>
         <Text style={styles.productName}>{item.Product_name}</Text>
-        <Text style={styles.productInfo}>Quantity: {item.item_quantity}</Text>
-        <Text style={styles.productInfo}>Price: ₹{item.item_sell_price}</Text>
-        <Text style={styles.productInfo}>Weight: {item.item_weight} kg</Text>
+        <Text style={styles.productInfo}>Quantity: {item.quantity}</Text>
+        <Text style={styles.productInfo}>Price: ₹{item.sell_price}</Text>
       </View>
     </View>
   );
 
-  // Render the entire order, including address and other details
-  const renderOrder = ({ item }) => (
-    <View style={styles.orderContainer}>
-      <Text style={styles.orderInfo}>Order ID: {item.order_id}</Text>
-      <Text style={styles.orderInfo}>Total Price: ₹{item.total_price}</Text>
-      <Text style={styles.orderInfo}>Payment Method: {item.payment_method}</Text>
-      <Text style={styles.orderInfo}>Delivery Address: {item.address}</Text>
-      <Text style={styles.orderInfo}>Order Date: {new Date(item.order_date).toLocaleDateString()}</Text>
+  // Toggle expanded state for specific order
+  const toggleExpanded = (orderId) => {
+    setExpandedOrders((prevState) => ({
+      ...prevState,
+      [orderId]: !prevState[orderId],
+    }));
+  };
 
-      <FlatList
-        data={item.order_items}
-        renderItem={renderOrderItems}
-        keyExtractor={(product, index) => index.toString()} // Using index as key for order items
-      />
-    </View>
-  );
+  // Render the entire order, including address and other details
+  const renderOrder = ({ item }) => {
+    const isExpanded = expandedOrders[item.order_id] || false;
+
+    return (
+      <View style={styles.orderContainer}>
+        {/* Always visible */}
+        <Text style={styles.orderInfo}>User ID: {item.user_id}</Text>
+        <Text style={styles.orderInfo}>Order ID: {item.order_id}</Text>
+
+        {/* View More Button */}
+        <TouchableOpacity onPress={() => toggleExpanded(item.order_id)}>
+          <Text style={styles.viewMoreText}>{isExpanded ? 'View Less' : 'View More'}</Text>
+        </TouchableOpacity>
+
+        {/* Expanded Details */}
+        {isExpanded && (
+          <>
+            <Text style={styles.orderInfo}>Total Price: ₹{item.total_price}</Text>
+            <Text style={styles.orderInfo}>Payment Method: {item.payment_method}</Text>
+            <Text style={styles.orderInfo}>Delivery Address: {item.address}</Text>
+            <Text style={styles.orderInfo}>Order Date: {new Date(item.order_date).toLocaleDateString()}</Text>
+
+            <FlatList
+              data={item.order_items}
+              renderItem={renderOrderItems}
+              keyExtractor={(product, index) => index.toString()} // Using index as key for order items
+            />
+          </>
+        )}
+      </View>
+    );
+  };
 
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
       <ExpandableLocationCard showBackButton={true} />
       <Header title="Your Orders" />
       {loading ? (
@@ -120,13 +146,19 @@ const YourOrder = () => {
       ) : (
         <Text style={styles.emptyText}>No orders found.</Text>
       )}
-    </View>
+      <View style={styles.bottomContainer}>
+        <Bottom activeIcon="Orders" />
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   orderContainer: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
     margin: 10,
     padding: 10,
     borderRadius: 10,
@@ -139,6 +171,7 @@ const styles = StyleSheet.create({
   orderItemContainer: {
     flexDirection: 'row',
     marginVertical: 10,
+    backgroundColor: '#fff',
   },
   productImage: {
     width: 80,
@@ -161,11 +194,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginVertical: 2,
   },
-  loading: {
-    marginTop: 20,
+  viewMoreText: {
+    color: '#007bff',
+    fontWeight: 'bold',
+    marginVertical: 5,
   },
   flatlistContainer: {
-    paddingBottom: 20, // Ensure proper spacing at the bottom
+    paddingBottom: 100, // Ensure space for the bottom navigation
   },
   emptyText: {
     textAlign: 'center',
@@ -177,6 +212,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: 'red',
+  },
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   // Skeleton loader styles
   skeletonContainer: {

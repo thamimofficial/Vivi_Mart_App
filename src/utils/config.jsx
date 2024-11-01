@@ -331,7 +331,6 @@ export const getAllProduct = async () => {
 
 
 export const getYourOrders = async (phone_number) => {
-  // No need to encode phone_number since it's passed as a query parameter
   const url = `${BASE_URL}/orders/order-by-phone?phone_number=${phone_number}`;
 
   try {
@@ -343,12 +342,14 @@ export const getYourOrders = async (phone_number) => {
       },
     });
 
+    // Try reading the response body
     const responseData = await response.json();
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorText}`);
-    }
+    // if (!response.ok) {
+    //   // Instead of trying to read the body again, use the already parsed responseData
+    //   const errorMessage = responseData.message || 'Unknown error occurred';
+    //   throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorMessage}`);
+    // }
 
     // Return both status code and response data
     return {
@@ -361,3 +362,4 @@ export const getYourOrders = async (phone_number) => {
     throw error;
   }
 };
+

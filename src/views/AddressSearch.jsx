@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, FlatList, Text, TouchableOpacity, StyleSheet, Alert, Platform, PermissionsAndroid } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Geolocation from 'react-native-geolocation-service'; // Import Geolocation
+import Geolocation from '@react-native-community/geolocation';
 
 import { getlocationID } from '../utils/config';
 
@@ -112,22 +112,38 @@ const GooglePlacesAutocomplete = () => {
     }
   };
 
+  // Request location permission
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Access Required',
+          message: 'This app needs to access your location',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        Alert.alert('Permission Denied', 'Location permission is required to use this feature');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const getCurrentLocation = async () => {
     const hasPermission = await requestLocationPermission();
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
-      return;
-    }
+    if (!hasPermission) return;
 
     Geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        console.log('Current Latitude:', latitude);
-        console.log('Current Longitude:', longitude);
-
         setLocationData({ lat: latitude, lng: longitude });
-        // Navigate to MapScreen with the current location data
+        console.log('Current Location:', latitude, longitude);
         navigation.navigate('MapScreen', { lat: latitude, lng: longitude });
+        // Alert.alert('Current Location', `Lat: ${latitude}, Lng: ${longitude}`);
       },
       (error) => {
         console.error('Error getting location:', error);
@@ -138,6 +154,8 @@ const GooglePlacesAutocomplete = () => {
   };
 
   const renderPrediction = ({ item }) => (
+    <View  style={{flexDirection:'row',alignItems:'center'}}>
+      <MaterialIcons name={'location-pin'} size={30} color="#000000" style={{marginLeft:10}}/>
     <TouchableOpacity
       onPress={() => {
         console.log('Selected Address:', item.full_address);
@@ -152,22 +170,43 @@ const GooglePlacesAutocomplete = () => {
       }}
       style={styles.predictionItem}
     >
+     
       <Text style={styles.mainText}>{item.description.split(' ')[0]}</Text>
-      <Text style={styles.subText}>{item.full_address}</Text>
+      <Text style={styles.subText}>
+      {item.full_address?.slice(0, item.full_address.indexOf('India') + 5)}
+    </Text>
+
     </TouchableOpacity>
+    </View>
   );
 
   const renderCurrentLocation = () => (
-    <TouchableOpacity
+  <View>
+      <TouchableOpacity
       style={{ flexDirection: 'row', alignSelf: 'flex-start', justifyContent: 'flex-start', marginVertical: 10,marginHorizontal:30 }}
       onPress={getCurrentLocation}
     >
       <MaterialIcons name={'my-location'} size={30} color="#000000" />
       <View style={{ marginLeft: 10 }}>
-        <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Use Current Location</Text>
+        <Text style={{ fontSize: 16, fontWeight: 'bold' ,color:'#000'}}>Use Current Location</Text>
         <Text style={{ fontSize: 14, color: '#777' }}>Using GPS</Text>
       </View>
     </TouchableOpacity>
+
+
+    <TouchableOpacity
+      style={{ flexDirection: 'row', alignSelf: 'flex-start', justifyContent: 'flex-start', marginVertical: 10,marginHorizontal:30 }}
+      onPress={()=>navigation.navigate('AddAddress')}
+    >
+      <MaterialIcons name={'add-location-alt'} size={30} color="#000000" />
+      <View style={{ marginLeft: 10 }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold' ,color:'#000'}}>Add Address</Text>
+        {/* <Text style={{ fontSize: 14, color: '#777' }}>Using GPS</Text> */}
+      </View>
+    </TouchableOpacity>
+  </View>
+
+    
   );
 
   return (
@@ -182,6 +221,7 @@ const GooglePlacesAutocomplete = () => {
           value={searchText}
           placeholder="Enter Location"
           autoFocus={true}
+          placeholderTextColor='black'
         />
       </View>
 
@@ -218,6 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     fontSize: 16,
     borderRadius: 10,
+    color:'black'
   },
   predictionItem: {
     backgroundColor: '#fff',
@@ -228,22 +269,22 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     borderColor: '#ddd',
     borderBottomWidth: 1,
-    elevation: 3,
   },
   mainText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#000',
   },
   subText: {
-    color: '#666',
+    fontSize: 14,
+    color: '#555',
     marginTop: 5,
   },
   emptyText: {
-    padding: 20,
-    textAlign: 'center',
-    color: '#888',
     fontSize: 16,
+    textAlign: 'center',
+    color: '#aaa',
+    marginTop: 20,
   },
 });
 

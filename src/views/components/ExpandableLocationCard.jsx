@@ -184,7 +184,7 @@ console.log('location data',data)
             )}
 
       <TouchableOpacity onPress={()=>navigation.navigate('GooglePlacesAutocomplete')} style={styles.topBar}>
-        <Ionicons name="chevron-down-outline" size={18} color="#fff" />
+       
         <View style={{flexDirection:'row'}}>
             <Text style={styles.topBarText} numberOfLines={1}>
               {locationData ? `${locationData.city_name}` : 'Select your location'}
@@ -193,6 +193,7 @@ console.log('location data',data)
               {locationData ? `${locationData.pin_codes}` : ' '}
             </Text>
         </View>
+        <Ionicons name="chevron-down-outline" size={18} color="#fff" />
       </TouchableOpacity>
 
       </View>
@@ -259,6 +260,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
+    backgroundColor:'#1c44fc'
   },
   topBar: {
     width: '100%',

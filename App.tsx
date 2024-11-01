@@ -13,6 +13,8 @@ import SplashScreen from './src/views/authentication/SplashScreen';
 import MapScreen from './src/views/Mapviews';
 import PhoneSignIn from './src/views/authentication/PhoneSignIn';
 import YourOrder from './src/views/YourOrder';
+import Profile from './src/views/Profile';
+import AddAddress from './src/views/AddAddress';
 // import RazorpayPayment from './src/views/razorpaylink';
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +37,9 @@ export default function App() {
           <Stack.Screen name="AllProduct" component={AllProduct} options={{headerShown: false}} />
           <Stack.Screen name="MapScreen" component={MapScreen} options={{headerShown: false}} />
           <Stack.Screen name="YourOrder" component={YourOrder} options={{headerShown: false}} />
+          
+          <Stack.Screen name="Profile" component={Profile} options={{headerShown: false}} />
+          <Stack.Screen name="AddAddress" component={AddAddress} options={{headerShown: false}} />
           
 
           {/* Add other screens here */}

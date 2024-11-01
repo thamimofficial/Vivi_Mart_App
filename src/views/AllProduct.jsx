@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, Alert, Animated } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAllProduct } from '../utils/config';
@@ -10,6 +10,7 @@ const AllProduct = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [productsData, setProductsData] = useState([]);
   const [quantities, setQuantities] = useState({}); // Track quantities for each product
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -21,13 +22,16 @@ const AllProduct = ({ navigation }) => {
             acc[product.Product_id] = 0; // Initialize quantities
             return acc;
           }, {}));
+          setLoading(false); // Data loaded, set loading to false
         } else if (status === 200 && data.length === 0) {
           Alert.alert('No products available');
+          setLoading(false); // No products available, set loading to false
         } else {
           throw new Error('Failed to fetch products');
         }
       } catch (error) {
         Alert.alert('Error', error.message);
+        setLoading(false); // Error occurred, set loading to false
       }
     };
 
@@ -134,37 +138,44 @@ const AllProduct = ({ navigation }) => {
 
   const renderProductCard = ({ item }) => (
     <View key={item.Product_id} style={styles.card}>
-    <Image source={{ uri: item.Prodouct_img_0 ||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723'}} style={styles.productImage} />
-    <View style={styles.productDetails}>
-      <Text style={styles.productName}>{item.Product_name}</Text>
-      <Text style={styles.productPrice}>Sell Price: ₹{item.sell_price}</Text>
-      <Text style={styles.productMRP}>MRP: ₹{item.MRP}</Text>
-      <Text style={styles.productOffer}>Offer: {item.offer}% off</Text>
+      <Image source={{ uri: item.Prodouct_img_0 || 'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723' }} style={styles.productImage} />
+      <View style={styles.productDetails}>
+        <Text style={styles.productName}>{item.Product_name}</Text>
+        <Text style={styles.productPrice}>Sell Price: ₹{item.sell_price}</Text>
+        <Text style={styles.productMRP}>MRP: ₹{item.MRP}</Text>
+        <Text style={styles.productOffer}>Offer: {item.offer}% off</Text>
+      </View>
+      <View style={styles.quantityContainer}>
+        {quantities[item.Product_id] === 0 ? (
+          <TouchableOpacity style={styles.addButton} onPress={() => incrementQuantity(item.Product_id)}>
+            <Text style={styles.addButtonText}>Add</Text>
+            <Ionicons name="add" size={20} color="#fff" style={{ fontSize: 18, color: 'black', fontWeight: 'bold', paddingLeft: 10 }} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.quantityContainer}>
+            <TouchableOpacity onPress={() => decrementQuantity(item.Product_id)} style={styles.quantityButton}>
+              <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{quantities[item.Product_id]}</Text>
+            <TouchableOpacity onPress={() => incrementQuantity(item.Product_id)} style={styles.quantityButton}>
+              <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
-  
-    <View style={styles.quantityContainer}>
-      {quantities[item.Product_id] === 0 ? (
+  );
 
-        <TouchableOpacity style={styles.addButton} onPress={() => incrementQuantity(item.Product_id)}>
-        <Text style={styles.addButtonText}>Add</Text>
-        <Ionicons name="add" size={20} color="#fff" style={{fontSize:18,color:'black', fontWeight:'bold',paddingLeft:10}} />
-        </TouchableOpacity>
-      ) : (
-       <View style={styles.quantityContainer}>
-        <TouchableOpacity onPress={() => decrementQuantity(item.Product_id)} style={styles.quantityButton}>
-          {/* <Text >-</Text> */}
-          <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.quantityText}>{quantities[item.Product_id]}</Text>
-        <TouchableOpacity onPress={() => incrementQuantity(item.Product_id)} style={styles.quantityButton}>
-          {/* <Text style={styles.quantityButtonText}>+</Text> */}
-          <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-        </View>
-      )}
+  const renderSkeleton = () => (
+    <View style={styles.card}>
+      <View style={styles.productImageSkeleton} />
+      <View style={styles.productDetailsSkeleton}>
+        <View style={styles.skeletonText} />
+        <View style={styles.skeletonText} />
+        <View style={styles.skeletonText} />
+        <View style={styles.skeletonText} />
+      </View>
     </View>
-  </View>
-  
   );
 
   return (
@@ -191,23 +202,33 @@ const AllProduct = ({ navigation }) => {
             <Ionicons name="cart-outline" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconWrapper} onPress={() => navigation.navigate('YourOrder')}>
-                    <Ionicons name="grid-outline" size={24} color="#fff" />
-                </TouchableOpacity>
+            <Ionicons name="grid-outline" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
       </View>
-<View style={{marginTop:10}}>   
-     <FlatList
-        data={filteredProducts}
-        renderItem={renderProductCard}
-        keyExtractor={item => item.Product_id.toString()}
-        contentContainerStyle={styles.productList}
-        showsVerticalScrollIndicator={false}
-      />
+      <View style={{ marginTop: 10 }}>
+        {loading ? (
+          <FlatList
+            data={[1, 2, 3, 4]} // Fake data for skeleton
+            renderItem={renderSkeleton}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={styles.productList}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            renderItem={renderProductCard}
+            keyExtractor={item => item.Product_id.toString()}
+            contentContainerStyle={styles.productList}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
-
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

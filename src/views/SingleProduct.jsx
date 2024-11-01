@@ -12,33 +12,26 @@ const SingleProduct = ({ route }) => {
 
   const handleAddToCart = async () => {
     try {
-      // Retrieve existing cart items
       const cartItems = await AsyncStorage.getItem('cartItems');
       let updatedCart = cartItems ? JSON.parse(cartItems) : [];
 
-      // Check if the product already exists in the cart
       const productIndex = updatedCart.findIndex(item => item.product_id === product.Product_id);
 
       if (productIndex !== -1) {
-        // If the product already exists, update the quantity
         updatedCart[productIndex].quantity += quantity;
-        // Alert.alert('Success', 'Product quantity updated in cart!');
       } else {
-        // If it does not exist, add it to the cart with the current quantity
         updatedCart.push({
           Prodouct_img: product.Prodouct_img_0,
           product_id: product.Product_id,
-          quantity: quantity, // Add the quantity here
+          quantity: quantity,
           sell_price: product.sell_price,
-          weight: 1.00, // Adjust this value as necessary
+          weight: product.Weight,
+          delivery_option: product.delivery_option
         });
-        // Alert.alert('Success', 'Product added to cart!');
       }
 
-      // Store updated cart in AsyncStorage
       await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
-      
-      // Reset quantity and state
+
       setIsAddedToCart(true);
       setQuantity(1); // Reset quantity to 1 after adding to cart
     } catch (error) {
@@ -54,24 +47,19 @@ const SingleProduct = ({ route }) => {
     if (quantity > 1) {
       setQuantity(quantity - 1);
     } else {
-      // If quantity is 1 and decrement is pressed, remove the item from the cart
       try {
-        // Retrieve existing cart items
         const cartItems = await AsyncStorage.getItem('cartItems');
         let updatedCart = cartItems ? JSON.parse(cartItems) : [];
 
-        // Find the product index
         const productIndex = updatedCart.findIndex(item => item.product_id === product.Product_id);
-        
+
         if (productIndex !== -1) {
-          // Remove the product from the cart
           updatedCart.splice(productIndex, 1);
           await AsyncStorage.setItem('cartItems', JSON.stringify(updatedCart));
-          // Alert.alert('Removed', 'Product removed from cart!'); // Show alert
         }
 
-        setIsAddedToCart(false); // Show "Add to Cart" button again
-        setQuantity(1); // Reset quantity to 1
+        setIsAddedToCart(false);
+        setQuantity(1);
       } catch (error) {
         Alert.alert('Error', 'Failed to remove product from cart');
       }
@@ -85,7 +73,10 @@ const SingleProduct = ({ route }) => {
       <ScrollView>
         {/* Product Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: product.Prodouct_img_0 ||'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723'}} style={styles.image} />
+          <Image 
+            source={{ uri: product.Prodouct_img_0 || 'https://ik.imagekit.io/efsdltq0e/icons/No_img.png?updatedAt=1727376099723' }} 
+            style={styles.image} 
+          />
         </View>
 
         {/* Product Details */}
@@ -94,7 +85,7 @@ const SingleProduct = ({ route }) => {
 
           <View style={styles.priceContainer}>
             <Text style={styles.productPrice}>₹{product.sell_price}</Text>
-            <Text style={styles.productOffer}>₹{product.offer}</Text>
+            <Text style={styles.productOffer}>₹{product.MRP}</Text>
           </View>
 
           {/* Add to Cart Button or Quantity Selector */}
@@ -106,34 +97,46 @@ const SingleProduct = ({ route }) => {
           ) : (
             <View style={styles.quantityContainer}>
               <TouchableOpacity style={styles.quantityButton} onPress={decreaseQuantity}>
-              <Ionicons style={styles.quantityButtonText} name="remove-outline" size={24} color="#fff" />
+                <Ionicons name="remove-outline" size={24} color="#fff" />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity style={styles.quantityButton} onPress={increaseQuantity}>
-              <Ionicons style={styles.quantityButtonText} name="add-outline" size={24} color="#fff" />
+                <Ionicons name="add-outline" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Information Sections */}
+          {/* Display all the product details */}
           <View style={styles.infoSection}>
-            <Ionicons name="bicycle-outline" size={20} color="#6c757d" />
-            <Text style={styles.infoText}>Delivery Option: {product.delivery_option}</Text>
-          </View>
-
-          <View style={styles.infoSection}>
-            <Ionicons name="information-circle-outline" size={20} color="#6c757d" />
-            <Text style={styles.infoText}>About Product: {product.About_Product}</Text>
-          </View>
-
-          <View style={styles.infoSection}>
-            <Ionicons name="checkmark-circle-outline" size={20} color="#6c757d" />
-            <Text style={styles.infoText}>Benefits: {product.Benefits}</Text>
-          </View>
-
-          <View style={styles.infoSection}>
-            <Ionicons name="cube-outline" size={20} color="#6c757d" />
-            <Text style={styles.infoText}>Storage and Uses: {product.Storage_and_Uses}</Text>
+            <Text style={styles.sectionTitle}>Product Details</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="information-circle-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>About Product: {product.About_Product}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="checkmark-circle-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>Benefits: {product.Benefits}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="cube-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>Storage and Uses: {product.Storage_and_Uses}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="pricetags-outline" size={20} color="green" />
+              <Text style={styles.infoText}>Brand: {product.Brand_name}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="bicycle-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>Delivery Option: {product.delivery_option}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="speedometer-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>Weight: {product.Weight}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Ionicons name="cash-outline" size={20} color="#000" />
+              <Text style={styles.infoText}>GST Rate: {product.GST_Rate}%</Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -144,94 +147,105 @@ const SingleProduct = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Slight off-white background for full screen
+    backgroundColor: '#fff', // Light background
   },
   imageContainer: {
     backgroundColor: '#ffffff',
-    elevation: 3, // Card-like effect for the image
-    margin: 10,
+    elevation: 8,
+    margin: 15,
     borderRadius: 10,
+    overflow: 'hidden', // Ensures the image follows the border radius
   },
   image: {
     width: '100%',
     height: 350,
-    resizeMode: 'contain',
-    borderRadius: 10,
+    resizeMode: 'cover',
   },
   card: {
     backgroundColor: '#fff',
     padding: 20,
-    marginHorizontal: 10,
-    marginBottom: 20,
+    marginHorizontal: 15,
+    marginBottom: 25,
     borderRadius: 10,
+    shadowColor: '#000', // Add shadow for better visual depth
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
   },
   productName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    color: '#343a40', // Darker text for better contrast
+    marginBottom: 15,
   },
   priceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
   },
   productPrice: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#28a745',
+    color: '#28a745', // Green for pricing
     marginRight: 10,
   },
   productOffer: {
-    fontSize: 16,
-    color: '#dc3545',
+    fontSize: 18,
+    color: 'silver', // Red for offer
     textDecorationLine: 'line-through',
   },
   addToCartButton: {
     flexDirection: 'row',
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#ecfdf5', // Lighter greenish background
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
-    borderColor:'green',
-    borderWidth:1
+    marginTop: 20,
+    borderColor: '#28a745', // Match with the theme
+    borderWidth: 1,
   },
   addToCartText: {
-    color: '#000',
+    color: '#28a745',
     fontWeight: 'bold',
     marginLeft: 10,
+    fontSize: 16,
   },
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: 20,
   },
   quantityButton: {
-    backgroundColor: '#318616',
-    paddingVertical:5,
-    paddingHorizontal: 10,
+    backgroundColor: '#28a745', // Green for buttons
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
   },
   quantityText: {
     fontSize: 18,
-    marginHorizontal: 15,
-  },
-  quantityButtonText: {
-    color: '#fff',
-    fontSize: 10,
+    marginHorizontal: 20,
+    color: '#333', // Neutral text color
     fontWeight: 'bold',
   },
   infoSection: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#343a40',
+  },
+  infoRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 5,
+    marginBottom: 8,
   },
   infoText: {
-    marginLeft: 10,
-    color: '#555',
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#495057', // Slightly darker text for better readability
   },
 });
 

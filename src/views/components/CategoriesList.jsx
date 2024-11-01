@@ -13,7 +13,7 @@ const CategoriesList = ({ onCategorySelect }) => {
       try {
         const { status, data } = await getCategories();
         if (status === 200) {
-          console.log('data', data);
+        //  console.log('data', data);
           setCategories(data); // Assuming the data is directly the list of categories
           if (data.length > 0) {
             // Set the first category as selected by default
@@ -96,8 +96,8 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     alignItems: 'center',
-    marginRight: 25,
-    width: 70,
+    marginRight: 5,
+    width: 80,
     padding: 5,
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
@@ -108,9 +108,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 5
   },
   categoryImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     borderWidth: 2,
     borderColor: '#ddd',
     overflow: 'hidden',

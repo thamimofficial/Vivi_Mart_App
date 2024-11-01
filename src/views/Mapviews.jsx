@@ -77,10 +77,8 @@ export default function MapScreen() {
         const formattedAddress = json.results[0].formatted_address;
         setRegion(formattedAddress);
 
-        // Extract pincode from the formatted address
-        const pincode = formattedAddress.match(/(\d{6})\s*,\s*India/)?.[1] || 'Pincode not found';
-        await AsyncStorage.setItem('pin_codes', pincode);
-        await AsyncStorage.setItem('city_name', formattedAddress);
+        // Save the address in AsyncStorage as address1, address2, etc.
+        await storeAddressInOrder(formattedAddress);
       } else {
         console.log('Geocoding error:', json.status);
       }
@@ -92,18 +90,27 @@ export default function MapScreen() {
     }
   };
 
-  // When the marker is dragged to a new location
-  const handleMarkerDragEnd = (e) => {
-    const newCoordinate = e.nativeEvent.coordinate;
-    setCoordinates(newCoordinate);
-    fetchAddress(newCoordinate.latitude, newCoordinate.longitude);
+  // Function to store addresses in order (address1, address2, etc.)
+  const storeAddressInOrder = async (formattedAddress) => {
+    try {
+      for (let i = 1; i <= 10; i++) {
+        const addressKey = `address${i}`;
+        const existingAddress = await AsyncStorage.getItem(addressKey);
+        if (!existingAddress) {
+          await AsyncStorage.setItem(addressKey, formattedAddress);
+          console.log(`${addressKey} stored:`, formattedAddress);
+          break;
+        }
+      }
+    } catch (error) {
+      console.log('Error storing address:', error);
+    }
   };
 
-  // When the map is pressed, set the marker and fetch the address
-  const handleMapPress = (e) => {
-    const newCoordinate = e.nativeEvent.coordinate;
-    setCoordinates(newCoordinate);
-    fetchAddress(newCoordinate.latitude, newCoordinate.longitude);
+  // Update coordinates when the map region changes
+  const handleRegionChangeComplete = (region) => {
+    setCoordinates({ latitude: region.latitude, longitude: region.longitude });
+    fetchAddress(region.latitude, region.longitude);
   };
 
   // Submit the selected location (coordinates and address)
@@ -113,7 +120,6 @@ export default function MapScreen() {
       longitude: coordinates.longitude,
       address: region,
     });
-    Alert.alert('Location Submitted', `Latitude: ${coordinates.latitude}, Longitude: ${coordinates.longitude}, Address: ${region}`);
     navigation.navigate('Home');
   };
 
@@ -128,12 +134,13 @@ export default function MapScreen() {
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
-        onPress={handleMapPress} // Add onPress event to the MapView
+        onRegionChangeComplete={handleRegionChangeComplete} // Track when the region (map) changes
       >
+        {/* Custom Marker with Resized Image */}
         <Marker
-          coordinate={coordinates} // Use the correct coordinates object
-          draggable
-          onDragEnd={handleMarkerDragEnd}
+          coordinate={coordinates}
+          image={{ uri: 'https://cdn0.iconfinder.com/data/icons/small-n-flat/24/678093-pin-512.png' }} 
+          style={{ width: 30, height: 30 }} // Resize the marker
         />
       </MapView>
 
@@ -154,7 +161,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-   
   },
   maps: {
     width: Dimensions.get('screen').width,
@@ -168,26 +174,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
-     borderWidth:1,borderColor:'gray'
+    borderWidth: 1,
+    borderColor: 'gray',
   },
   addressText: {
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 20,
-    textAlign:'center'
+    textAlign: 'center',
+    color: '#000',
   },
   submitButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: '#003d9d',
     borderRadius: 10,
-    width:'90%',
-    alignSelf:'center'
+    width: '90%',
+    alignSelf: 'center',
   },
   submitButtonText: {
     color: '#ffffff',
     fontSize: 20,
-    textAlign:'center',
-    fontWeight:'700'
+    textAlign: 'center',
+    fontWeight: '700',
   },
 });

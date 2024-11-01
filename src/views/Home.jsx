@@ -6,6 +6,7 @@ import { getSubCategories } from '../utils/config';
 import { useNavigation } from '@react-navigation/native';
 import Banners from './components/Banners';
 import ExpandableLocationCard from './components/ExpandableLocationCard';
+import Bottom from './bottom';
 
 // Get screen width
 const { width: screenWidth } = Dimensions.get('window');
@@ -48,7 +49,7 @@ const Home = () => {
     try {
       const { status, data } = await getSubCategories();
       if (status === 200) {
-        console.log('setSubCategoriesData',data)
+       // console.log('setSubCategoriesData',data)
         setSubCategoriesData(data); // Assuming data is directly the list of sub-categories
       } else {
         throw new Error(`Unexpected status code: ${status}`);
@@ -95,7 +96,7 @@ const Home = () => {
               key={index}
               style={[styles.card, { width: cardWidth }]}
               onPress={() => {
-                console.log('sub category',item); // Log the details of the clicked product
+                //console.log('sub category',item); // Log the details of the clicked product
                 navigation.navigate('ProductCard', { productDetails: item }); // Pass product details when navigating
               }}
             >
@@ -120,7 +121,7 @@ const Home = () => {
       <ScrollView
         contentContainerStyle={styles.scrollViewContainer}
         showsVerticalScrollIndicator={false}
-        ref={scrollViewRef} // Set the ref
+        ref={scrollViewRef} // Set the refr
       >
         <Banners />
         {categories.map((categoryName, index) => renderCategory(categoryName, index))}
@@ -128,6 +129,8 @@ const Home = () => {
 
       {loading && <Text style={styles.loadingText}>Loading...</Text>}
       {error && <Text style={styles.errorText}>{error}</Text>}
+
+      <Bottom activeIcon="Home" />
     </View>
   );
 };
@@ -164,15 +167,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
     margin: cardMargin,
-    paddingVertical: 5,
+    paddingVertical: 13,
     alignItems: 'center',
   },
   cardImage: {
-    width: '100%',
-    height: 60, // Adjust height for responsiveness
+    width: '90%',
+    height: 90, // Adjust height for responsiveness
     marginBottom: 5,
     resizeMode: 'contain',
-    borderRadius: 50
+    borderRadius: 20,
   },
   cardText: {
     fontSize: 10, // Smaller font size for responsiveness
@@ -196,4 +199,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Home;
+export default Home; 
